@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import CoolProp.CoolProp as CP
-from src.models.heatpump_MVV_GKM import Heatpump_tespy
+from heatpump_MVV_GKM import Heatpump_tespy
 #from models.mosaik_models.restructure_heatpump_tespy import HeatPump
 from tqdm import tqdm 
 
@@ -24,7 +24,7 @@ def simulation_loop():
         "heating_system_return_temp": 30.0,
         "cooling_system_feed_temp": 10.0,
         "cooling_system_return_temp": 15.0,        
-        "tamb_design": 15.0,
+        "tamb_design": 8,
         "heat_design": 100e3,        # 100 kW
         "cooling_Q_design": 50e3,    # 50 kW
         "cooling_tamb_design": 25.0
@@ -45,7 +45,7 @@ def simulation_loop():
             "dotm_pri": 7.6
         }
     }
-    df = pd.read_excel('data/process_data/Manheim_data.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=[2, 18]) #Load profile data
+    df = pd.read_excel('data/process_data/Manheim_data.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 76)) #Load profile data
     #df['date_time_clean'] = df['Zeit'].str.split(', ').str[1]
     #df['datetime'] = pd.to_datetime('2023 ' + df['date_time_clean'], format='%Y %d.%m. %H:%M')
     #df['datetime'] = df['datetime'].dt.strftime('%d%m%Y')
@@ -56,7 +56,7 @@ def simulation_loop():
     #df_cooling_load_sum = df_cooling_load.sum(axis=1)*1000
 
     # Thermal loads data 
-    df['Column30'] = pd.to_numeric(df['Column30'], errors='coerce')
+    #df['Column30'] = pd.to_numeric(df['Column30'], errors='coerce')
     thermal_loads = df['Column30'] * 1e6 # in Watts (Q at condenser)
 
     #date time data
@@ -68,10 +68,46 @@ def simulation_loop():
     heatpump_model = Heatpump_tespy(params_hp)
 
     print("Heatpump design mode successful")
-    for i in range(5):
-        print(df.iloc[i, [0, 2, 4]])
-    '''
+
+    n_steps = len(df)
     results=[]
+
+
+    for step in tqdm(range(n_steps), desc="Calculation"):
+        current_time = datetime.iloc[step]
+        Q_load = thermal_loads.iloc[step]
+        source_temp = source_input_temp.iloc[step]
+        if Q_load <= 0:
+            results.append({
+            'datetime': current_time,
+            'Souce_temp':  source_temp,
+            'Q_load [W]': Q_load,
+            'COP': None,
+            'Compressor Power [W]': None
+        })
+            continue
+        try:
+            # Step heat pump simulation
+            cop, power = heatpump_model.step(Q_load, source_temp)
+
+            results.append({
+                'datetime': current_time,
+                'Souce_temp':  source_temp,
+                'Q_load [W]': Q_load,
+                'COP': cop,
+                'Compressor Power [W]': power,
+                'error': None
+            })
+        except Exception as e:
+            print(f"\n❌ Error at step {step}, time {current_time}")
+            print(f"   Q_load = {Q_load}, ambient_temp = {source_temp}")
+            raise e
+    results_df = pd.DataFrame(results)
+    results_df.to_csv('combined_simulation_results.csv', index=False)
+    average_COP = results_df['COP'].mean()
+    print("Average COP:", average_COP) 
+'''
+results=[]
 
     for step in tqdm(range(n_steps), desc="Calculation"):
         #current_time = step * step_size / 3600  # hours

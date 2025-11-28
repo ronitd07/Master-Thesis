@@ -15,3 +15,6 @@ print(f"Saturation Temperature of {fluid} at {pressure/1e5} bar: {saturation_tem
 
 Pc = PropsSI("PCRIT", " ", 0, " ", 0, "R1234ZE")
 print(Pc)
+
+import sys
+print(sys.path)

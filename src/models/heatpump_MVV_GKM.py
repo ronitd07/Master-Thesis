@@ -63,7 +63,7 @@ class Heatpump_tespy():
         """
         #create network and connections
         #self.nwk = Network(fluids=[self.working_fluid, "air", "Water","INCOMP::MEG[0.2]|mass"], p_unit="bar", T_unit="C", h_unit="kJ / kg", v="m3 / h", iterinfo=False)
-        self.nwk = Network(fluids=[self.working_fluid, "Water"], iterinfo=True)
+        self.nwk = Network(fluids=[self.working_fluid, "Water"], iterinfo=False)
         self.nwk.units.set_defaults(pressure="bar", temperature = "°C", enthalpy = "kJ/kg", volumetric_flow = "m3/h",entropy = 'kJ / kgK' )
         self.cp1 = Compressor("compressor1")
         self.cp2 = Compressor("compressor2")
@@ -268,15 +268,15 @@ class Heatpump_tespy():
 
             self.nwk.solve("offdesign", design_path="data/process_data/hp_design_"+self.name+".json")
             # calculate parameters of the pump
-            cop = abs(self.cd.Q.val) / (self.cp.P.val + self.fan.P.val)
+            cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val)
             #cop = abs(self.cd.Q.val) / (self.cp.P.val )
-            compressor_power = self.cp.P.val + self.fan.P.val
+            compressor_power = self.cp1.P.val + self.cp2.P.val 
             #compressor_power = self.cp.P.val
-            load = abs(self.cd.Q.val)
-            T_evap = self.c2.T.val
+            #load = abs(self.cd.Q.val)
+            T_evap = self.c1.T.val
             T_cond = self.c4.T.val
-            T_delta = T_cond - T_evap
-            m_flow = self.c12.m.val
+            #T_delta = T_cond - T_evap
+            #m_flow = self.c12.m.val
         except Exception as e:
             # mark as infeasible — record error and continue
             print(e)
@@ -285,7 +285,7 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return cop, compressor_power, load, T_delta, m_flow
+        return cop, compressor_power
 
 
     def calc_partload_state_cooling(self, temperature:float=None, Q:float=None):
@@ -330,10 +330,10 @@ class Heatpump_tespy():
             _type_: _description_
         """
         if cooling == False:
-            cop, power, load, T_delta,m_flow = self.calc_partload_state(ambient_temperature, Q)
+            cop, power = self.calc_partload_state(ambient_temperature, Q)
         else:
             cop, power = self.calc_partload_state_cooling(ambient_temperature, Q)
-        return cop, power, load, T_delta, m_flow
+        return cop, power
     def evap_outlet_temperature(self):
         return self.c12.T.val 
     def plot(self):
