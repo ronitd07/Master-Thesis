@@ -149,95 +149,20 @@ class Heatpump_tespy():
             self.nwk.solve("design",print_results=True)
         except ValueError as e:
             print(e)
-        print("Pressure of 1st compressor ", self.c2.p.val," bar")
-        print("Pressure of 2nd compressor ", self.c3.p.val," bar")
-
 
 
         #vary heat exchanger efficiency
-        self.ev.set_attr(ttd_u=self.ttd_heat_exchanger)
+        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger)
         self.c1.set_attr(T=None)
         self.cd.set_attr(ttd_u=self.ttd_heat_exchanger)
         self.c4.set_attr(T=None)
         #save data
         self.nwk.solve("design")
 
-        cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val)
-        print("COP :",cop)
+        #cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val)
+        #print("COP :",cop)
 
         self.nwk.save("data/process_data/hp_design_"+self.name+".json")
-
-        ################################################################
-        #Setup the cooling case
-        ################################################################
-        if self.cooling_mode == True:
-            #create network and connections
-            #self.nwk_cooling = Network(fluids=[self.working_fluid, "air", "Water"], p_unit="bar", T_unit="C",  h_unit="kJ / kg", v_unit="m3 / h", iterinfo=False)
-            self.nwk_cooling = Network(fluids=[self.working_fluid, "air", "Water"],  iterinfo=False)
-            self.nwk_cooling.units.set_defaults(pressure="bar", temperature = "°C", enthalpy = "kJ/kg", volumetric_flow = "m3/h" )
-            self.cp_cooling = Compressor("compressor")
-            self.ev_cooling = HeatExchanger("evaporator")
-            self.cd_cooling = Condenser("condenser")
-            self.va_cooling = Valve("expansion valve")
-            self.cc_cooling = CycleCloser("cycle closer")
-            self.fan_cooling = Pump("fan") #fan is only needed with air source heatpumps
-            
-            self.so1_cooling = Source("ambient air source")
-            self.si1_cooling = Sink("ambient air sink")
-            self.so2_cooling = Source("heating source")
-            self.si2_cooling = Sink("heating sink")
-
-            self.c0_cooling = Connection(self.va_cooling, "out1", self.cc_cooling, "in1", label="0")
-            self.c1_cooling = Connection(self.cc_cooling, "out1", self.ev_cooling, "in2", label="1")
-            self.c2_cooling = Connection(self.ev_cooling, "out2", self.cp_cooling, "in1", label="2")
-            self.c3_cooling = Connection(self.cp_cooling, "out1", self.cd_cooling, "in1", label="3")
-            self.c4_cooling = Connection(self.cd_cooling, "out1", self.va_cooling, "in1", label="4")
-
-            self.nwk_cooling.add_conns(self.c0_cooling, self.c1_cooling, self.c2_cooling, self.c3_cooling, self.c4_cooling)
-
-            self.c11_cooling = Connection(self.so1_cooling, "out1", self.ev_cooling, "in1", label="11")
-            self.c12_cooling = Connection(self.ev_cooling, "out1", self.si1_cooling, "in1", label="12")
-
-            self.c20_cooling = Connection(self.so2_cooling, "out1", self.fan_cooling, "in1", label="20")
-            self.c21_cooling = Connection(self.fan_cooling, "out1", self.cd_cooling, "in2", label="21")
-            self.c22_cooling = Connection(self.cd_cooling, "out2", self.si2_cooling, "in1", label="22")
-
-            self.nwk_cooling.add_conns(self.c11_cooling, self.c12_cooling, self.c21_cooling, self.c22_cooling, self.c20_cooling)
-
-            ####################################################################
-            # Calculate the design case for cooling
-            ####################################################################
-            # set the parameters before and behind the compressor
-            # evaporation point
-            p_eva = CP.PropsSI("P", "Q", 1, "T", 2 + 273.15, self.working_fluid) * 1e-5
-            self.c2_cooling.set_attr(p=p_eva)
-
-            # condensation point
-            p_cond = CP.PropsSI("P", "Q", 0, "T", 60 + 273.15, self.working_fluid) * 1e-5
-            self.c4_cooling.set_attr(p=p_cond)
-            # condenser.set_attr(ttd_u=None)
-            h_evap = CP.PropsSI("H", "Q", 1, "T", 2 + 273.15, self.working_fluid) * 1e-3
-            self.c2_cooling.set_attr(Td_bp=None, h=h_evap * 1.01)
-
-            # set the values of some components
-            self.cp_cooling.set_attr(eta_s=self.eta_compressor)
-            self.ev_cooling.set_attr(Q=self.cooling_design)
-            self.fan_cooling.set_attr(eta_s=self.eta_fan) #TODO check if a fan curve is necessary
- 
-            #set connections around the hx
-            self.c2_cooling.set_attr(fluid={self.working_fluid: 1, "Water": 0, "air": 0})
-            self.c11_cooling.set_attr(fluid={self.working_fluid: 0, "Water": 1, "air": 0}, p=3, T=self.cooling_system_feed_temp)
-            self.c12_cooling.set_attr(T=self.cooling_system_return_temp)
-            self.c20_cooling.set_attr(fluid={self.working_fluid: 0, "Water": 0, "INCOMP::MEG[0.2]": 1}, T=self.cooling_tamb_design, p=1) #TODO test if this glykol works
-            self.c22_cooling.set_attr(T=self.heating_system_feed_tenp, p =1)
-            self.cd_cooling.set_attr(pr1=1, pr2=0.99)
-            self.ev_cooling.set_attr(pr1=1, pr2=1)
-             
-            # calculate and save design case
-            self.nwk_cooling.solve("design")
-            self.nwk_cooling.save("data/process_data/hp_design_cooling_"+self.name+".json")
-
-            #TODO manipulate JSON, so that there is the same design parameters
 
         
     def calc_partload_state(self, temperature:float=None, Q:float=None):
@@ -253,8 +178,7 @@ class Heatpump_tespy():
         if temperature != None:
             self.c10.set_attr(T=temperature)
         if Q != None:
-            self.cd.set_attr(Q=-Q)
-            
+            self.cd.set_attr(Q=-Q)  
         #self.nwk.reset_topology_reduction_specifications()
         # After design solves in partload_heat_pump()
         #self.ev.set_attr(ttd_u=None)
@@ -267,16 +191,15 @@ class Heatpump_tespy():
         try:
 
             self.nwk.solve("offdesign", design_path="data/process_data/hp_design_"+self.name+".json")
-            # calculate parameters of the pump
-            cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val)
+            cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
             #cop = abs(self.cd.Q.val) / (self.cp.P.val )
             compressor_power = self.cp1.P.val + self.cp2.P.val 
-            #compressor_power = self.cp.P.val
-            #load = abs(self.cd.Q.val)
+            load = abs(self.cd.Q.val)
             T_evap = self.c1.T.val
             T_cond = self.c4.T.val
             #T_delta = T_cond - T_evap
             #m_flow = self.c12.m.val
+            #print(self.c8.T.val," ", self.c0.T.val, " ", self.c1.T.val, " ", self.ev.ttd_l.val, " ", self.ev.ttd_u.val, " ", self.c1.p.val)
         except Exception as e:
             # mark as infeasible — record error and continue
             print(e)
@@ -285,39 +208,9 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return cop, compressor_power
+        return cop, compressor_power,load
 
-
-    def calc_partload_state_cooling(self, temperature:float=None, Q:float=None):
-        """This function can calculates cooling partload states of an heat pump with a calculated design state
-
-        Args:
-            temperature (float, optional): _description_. Defaults to None.
-            Q (float, optional): _description_. Defaults to None.
-
-        Returns:
-            _type_: _description_
-        """
-        if self.cooling_mode == True:
-            if temperature != None:
-                self.c20_cooling.set_attr(T=temperature)
-            if Q != None:
-                self.ev_cooling.set_attr(Q=Q)
-                
-            # self.nwk.reset_topology_reduction_specifications()
-            
-            self.nwk_cooling.solve("offdesign", design_path="data/process_data/hp_design_cooling_"+self.name+".json")
-
-            # calculate parameters of the pump
-            #? is it coorect to use the ev cooling as cop?
-            cop = abs(self.cd_cooling.Q.val) / (self.cp_cooling.P.val + self.fan_cooling.P.val)
-            compressor_power = self.cp_cooling.P.val + self.fan_cooling.P.val
-            
-            return cop, compressor_power
-        else:
-            raise ValueError("Please switch to cooling mode first with the function switch_to_cooling_mode")
-
-    
+   
     def step(self, Q:float, ambient_temperature:float, cooling:bool=False):
         """This function takes one step in the heatpump simulation and returns the values
 
@@ -330,10 +223,10 @@ class Heatpump_tespy():
             _type_: _description_
         """
         if cooling == False:
-            cop, power = self.calc_partload_state(ambient_temperature, Q)
+            cop, power,load = self.calc_partload_state(ambient_temperature, Q)
         else:
             cop, power = self.calc_partload_state_cooling(ambient_temperature, Q)
-        return cop, power
+        return cop, power,load
     def evap_outlet_temperature(self):
         return self.c12.T.val 
     def plot(self):
