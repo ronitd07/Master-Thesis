@@ -17,15 +17,15 @@ def simulation_loop():
         "name": "MyHeatPump",
         "working_fluid": "R1234ZE",
         "cooling_mode #not implemented": False,
-        "eta_compressor": 0.8,
+        "eta_compressor": 0.85,
         "eta_fan": 0.7,
-        "ttd_heat_exchanger": 5.0,
-        "heating_system_feed_temp": 80.0,
-        "heating_system_return_temp": 30.0,
+        "ttd_heat_exchanger": 6.0,
+        "heating_system_feed_temp": 91.0,
+        "heating_system_return_temp": 61.0,
         "cooling_system_feed_temp": 10.0,
         "cooling_system_return_temp": 15.0,        
-        "tamb_design": 8,
-        "heat_design": 100e3,        # 100 kW
+        "tamb_design": 15,
+        "heat_design": 100e3,        # 20 
         "cooling_Q_design": 50e3,    # 50 kW
         "cooling_tamb_design": 25.0
     }
@@ -45,8 +45,8 @@ def simulation_loop():
             "dotm_pri": 7.6
         }
     }
-    df = pd.read_excel('data/process_data/Manheim_data_cleaned2.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-    #df = pd.read_excel('data/process_data/Manheim_data_cleaned2.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
+    df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
+    #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
 
     thermal_loads = df['Column30'] * 1e6 # in Watts (Q at condenser)
 
@@ -55,7 +55,8 @@ def simulation_loop():
 
     # source input and output temperature data
     source_input_temp = df['Column27']  # in °C
-    source_output_temp = df['Column28'] # in °C
+    source_output_temp = df['Column28']  # in °C
+    sink_output_temp = df['Column23'] # in °C
 
     heatpump_model = Heatpump_tespy(params_hp)
 
@@ -65,10 +66,12 @@ def simulation_loop():
     results=[]
 
 
-    for step in tqdm(range(n_steps), desc="Calculation"):
+    for step in tqdm(range(0,n_steps,10), desc="Calculation"):
         current_time = datetime.iloc[step]
+        sink_temp = sink_output_temp.iloc[step]
+        source_temp_input = source_input_temp.iloc[step]
+        source_temp_output = source_output_temp.iloc[step]
         Q_load = thermal_loads.iloc[step]
-        source_temp = source_input_temp.iloc[step]
         '''
         if Q_load <= 0:
             results.append({
@@ -82,20 +85,22 @@ def simulation_loop():
             '''
         try:
             # Step heat pump simulation
-            cop, power,load = heatpump_model.step(Q_load, source_temp)
+            cop, power,load,T_delta = heatpump_model.step(sink_temp, source_temp_input,source_temp_output,Q_load)
 
             results.append({
                 'datetime': current_time,
-                'Souce_temp':  source_temp,
-                'Q_load [W]': Q_load,
+                'Souce_temp_input':  source_temp_input,
+                'Souce_temp_output':  source_temp_output,
+                'Sink_temp': sink_temp,
                 'COP': cop,
                 'Compressor Power [W]': power,
                 'Condensor load[W]' : load,
+                'Temp difference' : T_delta,
                 'error': None
             })
         except Exception as e:
             print(f"\n❌ Error at step {step}, time {current_time}")
-            print(f"   Q_load = {Q_load}, ambient_temp = {source_temp}")
+            print(f"   Sink_temp = {sink_temp}, ambient_temp = {source_temp_input}")
             raise e
     results_df = pd.DataFrame(results)
     results_df.to_csv('combined_simulation_results.csv', index=False)

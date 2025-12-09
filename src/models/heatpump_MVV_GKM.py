@@ -114,6 +114,8 @@ class Heatpump_tespy():
         # set the parameters before and behind the compressor
         self.c1.set_attr(T=self.tamb_design - self.ttd_heat_exchanger)
         self.c4.set_attr(T=self.heating_system_feed_tenp + self.ttd_heat_exchanger) 
+        #self.c4.set_attr(td_bubble = 2)
+        #self.c1.set_attr(td_dew = 2)
         #self.c1.set_attr(p=2) 
 
         # set the power and the compressor efficiencies 
@@ -141,12 +143,13 @@ class Heatpump_tespy():
         #self.c7.set_attr(p=Ref(self.c4,1,-10))
         self.c7.set_attr(p=10)
         self.c5.set_attr(fluid={self.working_fluid: 1})
-        #self.c4.set_attr(m=0.6)
+        #self.c1.set_attr(m=170)
         #self.c4.set_attr(td_bubble = 2)
         try:
 
             #solve the design case
             self.nwk.solve("design",print_results=True)
+            #print("Refrigerant temp : ",self.c0.T.val, "Water in temp : ", self.c11.T.val, "Water out temp : " ,self.c12.T.val)
         except ValueError as e:
             print(e)
 
@@ -156,16 +159,17 @@ class Heatpump_tespy():
         self.c1.set_attr(T=None)
         self.cd.set_attr(ttd_u=self.ttd_heat_exchanger)
         self.c4.set_attr(T=None)
+        #self.cd.set_attr(Q=-15e6)
         #save data
         self.nwk.solve("design")
-
+        #print("Refrigerant temp : ",self.c0.T.val, "Water in temp : ", self.c11.T.val, "Water out temp : " ,self.c12.T.val)
         #cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val)
         #print("COP :",cop)
 
         self.nwk.save("data/process_data/hp_design_"+self.name+".json")
 
         
-    def calc_partload_state(self, temperature:float=None, Q:float=None):
+    def calc_partload_state(self, temperature:float=None,source_temp_output:float=None, sink_temp:float=None, Q:float=None):
         """This function can calculate partload states of an heat pump with a calculated design state
 
         Args:
@@ -177,8 +181,10 @@ class Heatpump_tespy():
         """
         if temperature != None:
             self.c10.set_attr(T=temperature)
-        if Q != None:
+            self.c12.set_attr(T=source_temp_output)
+        #if Q != None:
             self.cd.set_attr(Q=-Q)  
+        self.c22.set_attr(T=sink_temp)
         #self.nwk.reset_topology_reduction_specifications()
         # After design solves in partload_heat_pump()
         #self.ev.set_attr(ttd_u=None)
@@ -197,9 +203,10 @@ class Heatpump_tespy():
             load = abs(self.cd.Q.val)
             T_evap = self.c1.T.val
             T_cond = self.c4.T.val
-            #T_delta = T_cond - T_evap
+            T_delta = T_cond - T_evap
             #m_flow = self.c12.m.val
             #print(self.c8.T.val," ", self.c0.T.val, " ", self.c1.T.val, " ", self.ev.ttd_l.val, " ", self.ev.ttd_u.val, " ", self.c1.p.val)
+            print("Refrigerant temp : ",self.c0.T.val, "Water in temp : ", self.c11.T.val, "Water out temp : " ,self.c12.T.val)
         except Exception as e:
             # mark as infeasible — record error and continue
             print(e)
@@ -208,10 +215,10 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return cop, compressor_power,load
+        return cop, compressor_power,load,T_delta
 
    
-    def step(self, Q:float, ambient_temperature:float, cooling:bool=False):
+    def step(self, sink_temp:float, ambient_temperature:float,source_temp_output:float, Q:float, cooling:bool=False):
         """This function takes one step in the heatpump simulation and returns the values
 
         Args:
@@ -223,10 +230,10 @@ class Heatpump_tespy():
             _type_: _description_
         """
         if cooling == False:
-            cop, power,load = self.calc_partload_state(ambient_temperature, Q)
+            cop, power,load,T_delta = self.calc_partload_state(ambient_temperature,source_temp_output, sink_temp,Q)
         else:
-            cop, power = self.calc_partload_state_cooling(ambient_temperature, Q)
-        return cop, power,load
+            cop, power = self.calc_partload_state_cooling(ambient_temperature, sink_temp,Q)
+        return cop, power,load,T_delta
     def evap_outlet_temperature(self):
         return self.c12.T.val 
     def plot(self):
@@ -301,13 +308,13 @@ if __name__ == "__main__":
         "cooling_mode #not implemented": False,
         "eta_compressor": 0.8,
         "eta_fan": 0.7,
-        "ttd_heat_exchanger": 5.0,
-        "heating_system_feed_temp": 80.0,
-        "heating_system_return_temp": 30.0,
+        "ttd_heat_exchanger": 6.0,
+        "heating_system_feed_temp": 90.0,
+        "heating_system_return_temp": 60.0,
         "cooling_system_feed_temp": 10.0,
         "cooling_system_return_temp": 15.0,        
         "tamb_design": 15.0,
-        "heat_design": 100e3,        # 100 kW
+        "heat_design": 10e3,        # 100 kW
         "cooling_Q_design": 50e3,    # 50 kW
         "cooling_tamb_design": 25.0
     }
