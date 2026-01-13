@@ -1,9 +1,10 @@
 
 """
-Mosaik interface for bhe model
+heat pump model of MVV GKM Manheim with subcooling
 
 """
-from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum
+from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger
+from tespy.tools.characteristics import CharLine
 from tespy.connections import Connection, Ref
 from tespy.networks import Network
 from fluprodia import FluidPropertyDiagram
@@ -44,7 +45,6 @@ class Heatpump_tespy():
         self.eta_compressor = params["eta_compressor"]
         self.eta_pump = params["eta_pump"]
         self.ttd_heat_exchanger = params["ttd_heat_exchanger"]
-        self.ttdl_heat_exchanger = params["ttdl_heat_exchanger"]
         self.heating_system_feed_tenp = params["heating_system_feed_temp"]
         self.heating_system_return_temp = params["heating_system_return_temp"]
         self.cooling_system_feed_temp = params["cooling_system_feed_temp"]
@@ -55,7 +55,7 @@ class Heatpump_tespy():
         self.cooling_tamb_design = params["cooling_tamb_design"]
 
         self.setup_heat_pump()
-        #self.plot2()
+        #self.plot()
     
     def setup_heat_pump(self):
         """This function generates a heatpump system and generates it for an design state
@@ -70,7 +70,8 @@ class Heatpump_tespy():
         self.cp1 = Compressor("compressor1")
         self.cp2 = Compressor("compressor2")
         self.ev = HeatExchanger("evaporator")
-        self.cd = Condenser("condenser")
+        #self.cd = Condenser("condenser")
+        self.cd = MovingBoundaryHeatExchanger("condenser")
         self.va1 = Valve("expansion valve1")
         self.va2 = Valve("expansion valve2")
         self.cc = CycleCloser("cycle closer")
@@ -119,7 +120,17 @@ class Heatpump_tespy():
 
         # set the power and the compressor efficiencies 
         Q_design = self.heat_design
-        self.cd.set_attr(Q=-Q_design)
+        self.cd.set_attr(Q=-100e3) # 100kW as a starting value
+
+        #Charline for compressor performance
+        self.eta_char = CharLine(
+        x=[1.0, 1.5, 2.0, 3.0],     # pressure ratio
+        y=[0.78, 0.75, 0.70, 0.62] # isentropic efficiency
+        )
+
+        #self.cp1.set_attr(design=['eta_s'],offdesign=['eta_s_char'])
+        #self.cp2.set_attr(design=['eta_s'],offdesign=['eta_s_char'])
+
         self.cp1.set_attr(eta_s=self.eta_compressor)
         self.cp2.set_attr(eta_s=self.eta_compressor)
 
@@ -131,20 +142,19 @@ class Heatpump_tespy():
         self.c1.set_attr(fluid={self.working_fluid: 1}, x=1.0)
         #self.c1.set_attr(td_dew=10)
         self.c10.set_attr(fluid={ "Water": 1},  T=self.tamb_design,p=1)
-        self.c12.set_attr(T=self.tamb_design -3)
+        self.c12.set_attr(T=self.tamb_design - 3)
         self.c21.set_attr(fluid={ "Water": 1}, p=3.0, T=self.heating_system_return_temp)
         self.c22.set_attr(T=self.heating_system_feed_tenp)
         #hx elements 
-        self.cd.set_attr(pr1=1, pr2=1,subcooling = True) 
-        self.c4.set_attr(td_bubble=5)
-        self.ev.set_attr(pr1=1, pr2=0.98)
+        self.cd.set_attr(pr1=1, pr2=1) 
+        self.c4.set_attr(td_bubble=32) # How to define this with real lab data 
+        self.ev.set_attr(pr1=1, pr2=0.995)
       
         #self.sp.set_attr(split=[0.6, 0.4])  # fraction of mass to out1/out2
         #self.c7.set_attr(p=Ref(self.c4,1,-10))
         self.c7.set_attr(p=10)
         self.c5.set_attr(fluid={self.working_fluid: 1})
         #self.c1.set_attr(m=170)
-        #self.c4.set_attr(td_bubble = 2)
         try:
 
             #solve the design case
@@ -155,10 +165,11 @@ class Heatpump_tespy():
 
 
         #vary heat exchanger efficiency
-        self.ev.set_attr(ttd_l=self.ttdl_heat_exchanger)
+        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger)
         self.c1.set_attr(T=None)
         self.cd.set_attr(ttd_u=self.ttd_heat_exchanger)
         self.c4.set_attr(T=None)
+        self.cd.set_attr(Q=-Q_design) #
         #save data
         self.nwk.solve("design")
         #cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val)
@@ -167,7 +178,7 @@ class Heatpump_tespy():
         self.nwk.save("data/process_data/hp_design_"+self.name+".json")
 
         
-    def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,p_inter:float=None, t_evap:float=None, t_cond:float=None):
+    def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,p_inter:float=None, t_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None):
         """This function can calculate partload states of an heat pump with a calculated design state
 
         Args:
@@ -185,14 +196,17 @@ class Heatpump_tespy():
         self.c7.set_attr(p=p_inter)    
         self.c21.set_attr(T=sink_temp_in)
         self.c22.set_attr(T=sink_temp_out)
-        self.ev.set_attr(ttd_l=None)
-        self.c1.set_attr(T=t_evap)
+        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger)
+        #self.c1.set_attr(T=t_evap)
+        self.c1.set_attr(td_dew = sp_comp1,x=None)
         self.cd.set_attr(ttd_u=None)
         self.c3.set_attr(T=t_cond)
-        #self.nwk.reset_topology_reduction_specifications()
+        t_cond_out = PropsSI("T", "P", p_cond*1e5, "Q", 0, self.working_fluid) - 273.15
+        t_subcooling = t_cond_out-t_subcooler
+        self.c4.set_attr(td_bubble=t_subcooling)
+        self.cp1.set_attr(eta_s=None, offdesign=['eta_s_char'])
+        self.cp2.set_attr(eta_s=None,offdesign=['eta_s_char'])
         # After design solves in partload_heat_pump()
-        #self.ev.set_attr(ttd_u=None)
-        #self.cd.set_attr(ttd_u=None)
 
         # Freeze the actual design areas for offdesign
         #self.ev.set_attr(kA=1.5*self.ev.kA.val)
@@ -201,16 +215,16 @@ class Heatpump_tespy():
         try:
 
             self.nwk.solve("offdesign", design_path="data/process_data/hp_design_"+self.name+".json")
+            self.nwk.print_results()
+            self.nwk.save('results.csv')
             cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
-            #cop = abs(self.cd.Q.val) / (self.cp.P.val )
             compressor_power = self.cp1.P.val + self.cp2.P.val 
             load = abs(self.cd.Q.val)
             T_evap = self.c1.T.val
             T_cond = self.c4.T.val
             T_delta = T_cond - T_evap
-            #m_flow = self.c12.m.val
-            #print("x8 : ",self.c8.x.val * 100, "%")
-            #print("Refrigerant temp : ",self.c0.T.val, "Water in temp : ", self.c11.T.val, "Water out temp : " ,self.c12.T.val)
+            print("Refrigerant input temp : ",self.c8.T.val, "Refrigerant output temp : ", self.c1.T.val,"Water in temp : ",self.c11.T.val,"Water out temp : ",self.c12.T.val)
+            print("Refrigerant coondensor input temp : ",self.c3.T.val, "Refrigerant condensor output temp : ", self.c4.T.val,"Sink Water in temp : ",self.c21.T.val,"Sink Water out temp : ",self.c22.T.val)
         except Exception as e:
             # mark as infeasible — record error and continue
             print(e)
@@ -222,7 +236,7 @@ class Heatpump_tespy():
         return cop, compressor_power,load,T_delta
 
    
-    def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,t_cond:float,cooling:bool=False):
+    def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,t_cond:float,sp_comp1:float,p_cond:float,t_subcooler:float,cooling:bool=False):
         """This function takes one step in the heatpump simulation and returns the values
 
         Args:
@@ -234,7 +248,7 @@ class Heatpump_tespy():
             _type_: _description_
         """
         if cooling == False:
-            cop, power,load,T_delta = self.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out, Q, p_inter, t_evap,t_cond)
+            cop, power,load,T_delta = self.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out, Q, p_inter, t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
         else:
             cop, power = self.calc_partload_state_cooling(source_temp_in, sink_temp_out,Q)
         return cop, power,load,T_delta
@@ -265,10 +279,10 @@ class Heatpump_tespy():
 
         #Plot P-h and T-S diagrams
 
-        T_vals = [c.T.val  for c in states]
-        s_vals = [c.s.val  for c in states]
-        p_vals = [c.p.val  for c in states]
-        h_vals = [c.h.val  for c in states]
+        T_vals = [c.T.val  for c in states] # degC
+        s_vals = [c.s.val/1e3  for c in states] # J/kgK
+        p_vals = [c.p.val  for c in states] # bar
+        h_vals = [c.h.val  for c in states] #kJ/kg
 
         # Close the cycle by adding the first point again
         T_vals.append(T_vals[0])
@@ -367,7 +381,6 @@ class Heatpump_tespy():
         for label, point in points.items():
             _ = ax.scatter(point["s"], point["T"], label=label, color="tab:red")
         plt.show()
-        
     def get_plotting_states(self, **kwargs):
         """Generate data of states to plot in state diagram."""
         data = {}
@@ -409,13 +422,13 @@ class Heatpump_tespy():
             {self.ev.label:
              self.ev.get_plotting_data()[2]}
         )
+
         
         for comp in data:
             if 'Compressor1' in comp:
                 data[comp]['starting_point_value'] *= 0.999999
         
         return data
-
     def generate_state_diagram(self, refrig='', diagram_type='logph',
                                style='light', figsize=(16, 10), fontsize=10,
                                legend=True, legend_loc='upper left',
@@ -654,90 +667,7 @@ class Heatpump_tespy():
 
         if return_diagram:
             return diagram
-'''
-    params = {
-    
-        "setup": {
-            "name": "open economizer",
-            "type": "HeatPumpEconOpen",
-            "refrig": "R717"
-        },
-        "ambient": {
-            "p": 1,
-            "T": 25
-        },
-        "fluids": {
-            "wf": "NH3",
-            "si": "H2O",
-            "so": "H2O"
-        },
-        "logph": {
-            "x_min": 250,
-            "x_max": 2250,
-            "y_min": 1e0,
-            "y_max": 3e2
-        },
-        "cond" : {
-            "pr1": 0.98,
-            "pr2": 0.98,
-            "ttd_u": 2
-        },
-        "evap": {
-            "pr1": 0.98,
-            "pr2": 0.98,
-            "ttd_l": 2
-        },
-        "cons" : {
-            "pr": 0.98,
-            "Q": -10e6
-        },
-        "econ": {
-            "pr1": 0.98,
-            "pr2": 0.98
-        },
-        "comp1": {
-            "eta_s": 0.75
-        },
-        "comp2": {
-            "eta_s": 0.75
-        },
-        "hs_pump": {
-            "eta_s": 0.8
-        },
-        "cons_pump": {
-            "eta_s": 0.8
-        },
-        "A5": {
-            "x": 1
-        },
-        "B1": {
-            "T": 10,
-            "p": 1.013
-        },
-        "B2": {
-            "T": 5
-        },
-        "C1": {
-            "T": 40
-        },
-        "C3": {
-            "T": 67,
-            "p": 10
-        },
-        "offdesign": {
-            "T_hs_ff_start": 10,
-            "T_hs_ff_end": 10,
-            "T_hs_ff_steps": 1,
-            "T_cons_ff_start": 56,
-            "T_cons_ff_end": 85,
-            "T_cons_ff_steps": 10,
-            "partload_min": 0.3,
-            "partload_max": 1.0,
-            "partload_steps": 8,
-            "save_results": True
-        }
-}
-'''
+
 if __name__ == "__main__":
     # Define the parameters dictionary
     params = {
@@ -747,7 +677,6 @@ if __name__ == "__main__":
         "eta_compressor": 0.8,
         "eta_pump": 0.7,
         "ttd_heat_exchanger": 6.0,
-        "ttdl_heat_exchanger": 4.0,
         "heating_system_feed_temp": 90.0,
         "heating_system_return_temp": 60.0,
         "cooling_system_feed_temp": 10.0,
