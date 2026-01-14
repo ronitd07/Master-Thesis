@@ -6,11 +6,11 @@ import matplotlib.dates as mdates
 import pandas as pd
 import fhgcd_plots.main as fhgCD
 
-df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-df2 = pd.read_csv('full_simulation_results.csv',sep=',')
+#df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
+#df2 = pd.read_csv('full_simulation_results.csv',sep=',')
 
-#df1 = pd.read_excel('data/process_data/Data 50.xlsx', sheet_name="Tabelle1", header=0,skiprows=range(1, 5)) #Load profile data
-#df2 = pd.read_csv('simulation_results.csv',sep=',')
+df1 = pd.read_excel('data/process_data/Data 50.xlsx', sheet_name="Tabelle1", header=0,skiprows=range(1, 5)) #Load profile data
+df2 = pd.read_csv('simulation_results.csv',sep=',')
 
 df1['Column1'] = pd.to_datetime(df1['Column1'])
 df2['datetime'] = pd.to_datetime(df2['datetime'])

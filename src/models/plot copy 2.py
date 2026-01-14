@@ -1,9 +1,12 @@
+'''
+Plot Compressor power simulated vs real
+'''
 import matplotlib.pyplot as plt
 import pandas as pd
 
 #df = pd.read_csv('combined_simulation_results.csv',sep=',')
-df1 = pd.read_excel('data/process_data/Manheim_data_cleaned2.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-df2 = pd.read_csv('combined_simulation_results.csv',sep=',')
+df1 = pd.read_excel('data/process_data/Data 50.xlsx', sheet_name="Tabelle1", header=0,skiprows=range(1, 5)) #Load profile data
+df2 = pd.read_csv('simulation_results.csv',sep=',')
 
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
 # Plot first dataframe (left y-axis)

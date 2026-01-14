@@ -88,7 +88,7 @@ def simulation_loop():
     results=[]
 
 
-    for step in tqdm(range(0,5,1), desc="Calculation"):
+    for step in tqdm(range(0,50,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -134,7 +134,8 @@ def simulation_loop():
     print("Average COP:", average_COP) 
     print("Nominal load (MW):", Q_nominal)
 
-    heatpump_model.plot3()
+    #Plot the eta_s curve
+    heatpump_model.plot_eta_s()
     #COP over the year
     plt.plot( results_df["datetime"],results_df["COP"], marker='o', color='purple')
     plt.title('COP vs Time')

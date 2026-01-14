@@ -5,6 +5,7 @@ heat pump model of MVV GKM Manheim with subcooling
 """
 from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger
 from tespy.tools.characteristics import CharLine
+from tespy.tools.characteristics import load_custom_char
 from tespy.connections import Connection, Ref
 from tespy.networks import Network
 from fluprodia import FluidPropertyDiagram
@@ -20,6 +21,7 @@ import os
 import numpy as np
 from CoolProp.CoolProp import PropsSI
 import matplotlib.pyplot as plt
+
 
 # import time as time
 
@@ -38,6 +40,11 @@ class Heatpump_tespy():
     """
     This is the model of the heatpump simulation
     """
+    eta1_vals = []
+    eta2_vals = []
+    m1_vals = []
+    m2_vals = []
+
     def __init__(self, params) -> None:
         self.name = params["name"]
         self.working_fluid = params["working_fluid"]
@@ -54,8 +61,14 @@ class Heatpump_tespy():
         self.cooling_design = params["cooling_Q_design"] #-323e3 #323 kW Kältelast
         self.cooling_tamb_design = params["cooling_tamb_design"]
 
+        self.eta1_vals = []
+        self.eta2_vals = []
+        self.m1_vals = []
+        self.m2_vals = []
+        
         self.setup_heat_pump()
-        #self.plot()
+
+
     
     def setup_heat_pump(self):
         """This function generates a heatpump system and generates it for an design state
@@ -127,12 +140,15 @@ class Heatpump_tespy():
         x=[1.0, 1.5, 2.0, 3.0],     # pressure ratio
         y=[0.78, 0.75, 0.70, 0.62] # isentropic efficiency
         )
+        gen_char = load_custom_char('eta_s_test', CharLine)
+        self.cp1.set_attr(eta_s=self.eta_compressor, design=['eta_s'], offdesign = ['eta_s_test'])
+        self.cp2.set_attr(eta_s=self.eta_compressor, design=['eta_s'], offdesign = ['eta_s_test'])
 
-        #self.cp1.set_attr(design=['eta_s'],offdesign=['eta_s_char'])
-        #self.cp2.set_attr(design=['eta_s'],offdesign=['eta_s_char'])
+        #self.cp1.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'] )
+        self.eta1_vals.append(self.eta_compressor)
 
-        self.cp1.set_attr(eta_s=self.eta_compressor)
-        self.cp2.set_attr(eta_s=self.eta_compressor)
+        #self.cp2.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'])
+        self.eta2_vals.append(self.eta_compressor)
 
         #set the fan efficiency
         self.fan.set_attr(eta_s=self.eta_pump,pr=1.002)
@@ -174,7 +190,9 @@ class Heatpump_tespy():
         self.nwk.print_results()
 
         self.m1_design = self.c1.m.val
-        self.m2_design = self.c2.m.val
+        self.m1_vals.append(self.m1_design)
+        self.m2_design = self.c2a.m.val
+        self.m2_vals.append(self.m2_design)
 
 
         # Get the design heat transfer coefficient to be used in offdesign case
@@ -201,17 +219,18 @@ class Heatpump_tespy():
         if Q != None:
             self.cd.set_attr(Q=-Q)  
         self.c7.set_attr(p=p_inter)    
-        self.c21.set_attr(T=None)
+        self.c21.set_attr(T=sink_temp_in)
         self.c22.set_attr(T=sink_temp_out)
         self.c1.set_attr(td_dew = sp_comp1,x=None)
-        self.cd.set_attr(ttd_u=None, UA = self.cond_UA_design)
+        #self.cd.set_attr(ttd_u=None, UA = self.cond_UA_design)
+        self.cd.set_attr(ttd_u=None)
         self.ev.set_attr(ttd_l=None, kA = self.ev_kA_design)
         self.c3.set_attr(T=t_cond)
         t_cond_out = PropsSI("T", "P", p_cond*1e5, "Q", 0, self.working_fluid) - 273.15
         t_subcooling = t_cond_out-t_subcooler
-        self.c4.set_attr(td_bubble=t_subcooling-6)
-        self.cp1.set_attr(eta_s=None, offdesign=['eta_s_char'])
-        self.cp2.set_attr(eta_s=None,offdesign=['eta_s_char'])
+        self.c4.set_attr(td_bubble=t_subcooling-10)
+        #self.cp1.set_attr(eta_s=None, offdesign=['eta_s_char'])
+        #self.cp2.set_attr(eta_s=None,offdesign=['eta_s_char'])
         # After design solves in partload_heat_pump()
 
         # Freeze the actual design areas for offdesign
@@ -230,14 +249,12 @@ class Heatpump_tespy():
             T_cond = self.c4.T.val
             T_delta = T_cond - T_evap
             ft_x = self.c5.x.val
-            self.eta1_vals = []
-            self.eta2_vals = []
+
             self.eta1_vals.append(self.cp1.eta_s.val)
             self.eta2_vals.append(self.cp2.eta_s.val)
-            self.m1_vals = []
-            self.m2_vals = []
+
             self.m1_vals.append(self.c1.m.val)
-            self.m2_vals.append(self.c2.m.val)
+            self.m2_vals.append(self.c2a.m.val)
 
             #print("p_cond :",p_cond,"t_cond_out: ",t_cond_out,"t_subcooler :",t_subcooler, "t_subcooling :",t_subcooling,"c4_t :",self.c4.T.val )
             #print("Refrigerant input temp : ",self.c8.T.val, "Refrigerant output temp : ", self.c1.T.val,"Water in temp : ",self.c11.T.val,"Water out temp : ",self.c12.T.val)
@@ -339,13 +356,42 @@ class Heatpump_tespy():
 
         plt.show()    # Shows in Window 2
 
-    def plot3(self):
+    def plot_eta_s(self):
+        '''
+        To plot the isentropic efficiency curve for the compressors in offdesign
+        
+        :param self: self
+        '''
+        fig,ax = plt.subplots(1, 2, figsize=(10, 4))
+                              
+        self.x1_vals = [m / self.m1_design for m in self.m1_vals]
+        self.eta_ref1 = [e / self.eta_compressor for e in self.eta1_vals]
 
-        self.m1_vals = [m / self.m1_design for m in self.m1_vals]
-        plt.plot(self.m1_vals,self.eta1_vals,marker='x')
-        plt.xlabel('Normalized mass flow (-)')
-        plt.ylabel('Relative isentropic efficiency (-)')
-        plt.grid(True)
+        #Adding the design case eta_s and x
+        #self.x1_vals.append(1)
+        #self.eta1_vals.append(self.eta_compressor)
+
+        ax[0].plot(self.x1_vals,self.eta_ref1 ,'x')
+        ax[0].set_xlabel('Mass flow / Design mass flow (x)')
+        ax[0].set_ylabel('Relative isentropic efficiency (eta_s/ eta_s_design)')
+        ax[0].grid(True)
+        ax[0].set_title("Compressor 1")
+
+        self.x2_vals = [m / self.m2_design for m in self.m2_vals]
+        self.eta_ref2 = [e / self.eta_compressor for e in self.eta2_vals]
+
+        #Adding the design case eta_s and x
+        #self.x2_vals.append(1)
+        #self.eta2_vals.append(self.eta_compressor)
+
+        ax[1].plot(self.x2_vals,self.eta_ref2,'x')
+        ax[1].set_xlabel('Mass flow / Design mass flow (x)')
+        ax[1].set_ylabel('Relative isentropic efficiency (eta_s/ eta_s_design)')
+        ax[1].grid(True)
+        ax[1].set_title("Compressor 2")
+
+
+        plt.tight_layout()
         plt.show()
     
     def plot2(self):
