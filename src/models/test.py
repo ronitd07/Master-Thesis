@@ -3,7 +3,7 @@ from CoolProp.CoolProp import PropsSI
 
 # Define the fluid and pressure (in Pa)
 fluid = "R1234ZE"
-pressure = 24.89 * 1e5  # Convert bar to Pa (1 bar = 1e5 Pa)
+pressure = 7.73 * 1e5  # Convert bar to Pa (1 bar = 1e5 Pa)
 
 # Calculate the saturation temperature (in Kelvin)
 saturation_temp_kelvin = PropsSI("T", "P", pressure, "Q", 0, fluid)
@@ -24,6 +24,10 @@ print(T_boil - 273.15)  # °C
 
 rho_crit = PropsSI('rhocrit', 'R1234ze(E)')
 print(rho_crit)  # kg/m^3
+
+s = PropsSI("S", "P", 2.136e5, "T", 1.198+273.15, fluid)
+print(s)  # kg/m^3
+h2s = PropsSI("H", "S", s, "T", 1.198+273.15, fluid)
 '''
 import sys
 print(sys.path)

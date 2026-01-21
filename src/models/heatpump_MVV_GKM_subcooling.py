@@ -69,6 +69,7 @@ class Heatpump_tespy():
         self.setup_heat_pump()
 
 
+
     
     def setup_heat_pump(self):
         """This function generates a heatpump system and generates it for an design state
@@ -129,20 +130,42 @@ class Heatpump_tespy():
         ####################################################################
         # set the parameters before and behind the compressor
         self.c1.set_attr(T=self.tamb_design - self.ttd_heat_exchanger)
-        self.c4.set_attr(T=self.heating_system_feed_tenp + self.ttd_heat_exchanger) 
+        self.c3.set_attr(T=self.heating_system_feed_tenp + self.ttd_heat_exchanger) 
 
         # set the power and the compressor efficiencies 
         Q_design = self.heat_design
         self.cd.set_attr(Q=-100e3) # 100kW as a starting value
 
-        #Charline for compressor performance
-        self.eta_char = CharLine(
-        x=[1.0, 1.5, 2.0, 3.0],     # pressure ratio
-        y=[0.78, 0.75, 0.70, 0.62] # isentropic efficiency
+        #Charline for compressor1 performance
+        line1 = CharLine(
+        x=[0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ] ,     # Mass flow ratio
+        #y=[0.373059 ,  0.62864322, 0.79268357 ,0.88967366, 0.94410716] # deg 3 isentropic efficiency
+        y=[0.40120622 ,0.62875276, 0.7918917 , 0.89062304 ,0.92494679] # deg 2 isentropic efficiency
+        )
+        # saves the char line plot
+        line1.plot(
+                path="charline.png",
+                title="Custom Characteristic Line comp1",
+                xlabel="x",
+                ylabel="y"
         )
         gen_char = load_custom_char('eta_s_test', CharLine)
-        self.cp1.set_attr(eta_s=self.eta_compressor, design=['eta_s'], offdesign = ['eta_s_test'])
-        self.cp2.set_attr(eta_s=self.eta_compressor, design=['eta_s'], offdesign = ['eta_s_test'])
+        self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line1}, offdesign = ['eta_s_char'])
+
+        #Charline for compressor2 performance
+        line2 = CharLine(
+        x=[0.19070308 ,0.32373575 ,0.45676843 ,0.58980111, 0.72283379]  ,     # Mass flow ratio
+        #y=[0.48490718 ,0.63255384 ,0.7194824 , 0.76619529 ,0.79319494]# deg 3 isentropic efficiency
+        y=[0.51114391, 0.6331605 , 0.71857524 ,0.76738812 ,0.77959914]  # deg 2 isentropic efficiency
+        )
+        # saves the char line plot
+        line2.plot(
+                path="charline.png",
+                title="Custom Characteristic Line comp2",
+                xlabel="x",
+                ylabel="y"
+        )
+        self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line2}, offdesign = ['eta_s_char'])
 
         #self.cp1.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'] )
         self.eta1_vals.append(self.eta_compressor)
@@ -163,18 +186,14 @@ class Heatpump_tespy():
         #hx elements 
         self.cd.set_attr(pr1=1, pr2=1) 
         self.c4.set_attr(td_bubble=15) # How to define this with real lab data 
-        self.ev.set_attr(pr1=1, pr2=0.995)
-      
-        #self.sp.set_attr(split=[0.6, 0.4])  # fraction of mass to out1/out2
-        #self.c7.set_attr(p=Ref(self.c4,1,-10))
+        self.ev.set_attr(pr1=1, pr2=1)
+
         self.c7.set_attr(p=10)
         self.c5.set_attr(fluid={self.working_fluid: 1})
-        #self.c1.set_attr(m=170)
         try:
 
             #solve the design case
             self.nwk.solve("design",print_results=True)
-            #print("Refrigerant temp : ",self.c0.T.val, "Water in temp : ", self.c11.T.val, "Water out temp : " ,self.c12.T.val)
         except ValueError as e:
             print(e)
 
@@ -183,7 +202,7 @@ class Heatpump_tespy():
         self.ev.set_attr(ttd_l=self.ttd_heat_exchanger)
         self.c1.set_attr(T=None)
         self.cd.set_attr(ttd_u=self.ttd_heat_exchanger)
-        self.c4.set_attr(T=None)
+        self.c3.set_attr(T=None)
         self.cd.set_attr(Q=-Q_design) #
         #save data
         self.nwk.solve("design")
@@ -203,7 +222,8 @@ class Heatpump_tespy():
         self.nwk.save("data/process_data/hp_design_"+self.name+".json")
 
         
-    def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,p_inter:float=None, t_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None):
+    def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,
+                            p_inter:float=None, t_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None):
         """This function can calculate partload states of an heat pump with a calculated design state
 
         Args:
@@ -223,14 +243,14 @@ class Heatpump_tespy():
         self.c22.set_attr(T=sink_temp_out)
         self.c1.set_attr(td_dew = sp_comp1,x=None)
         #self.cd.set_attr(ttd_u=None, UA = self.cond_UA_design)
-        self.cd.set_attr(ttd_u=None)
+        self.cd.set_attr(ttd_u=None,  UA = None)
         self.ev.set_attr(ttd_l=None, kA = self.ev_kA_design)
-        self.c3.set_attr(T=t_cond)
-        t_cond_out = PropsSI("T", "P", p_cond*1e5, "Q", 0, self.working_fluid) - 273.15
-        t_subcooling = t_cond_out-t_subcooler
-        self.c4.set_attr(td_bubble=t_subcooling-10)
-        #self.cp1.set_attr(eta_s=None, offdesign=['eta_s_char'])
-        #self.cp2.set_attr(eta_s=None,offdesign=['eta_s_char'])
+        self.c3.set_attr(p=p_cond)
+        self.t_cond_out = PropsSI("T", "P", self.c3.p.val*1e5, "Q", 0, self.working_fluid) - 273.15
+        t_subcooling = self.t_cond_out-t_subcooler
+        self.c4.set_attr(td_bubble=t_subcooling)
+        #self.cp1.set_attr(eta_s=None)
+        #self.cp2.set_attr(eta_s=None)
         # After design solves in partload_heat_pump()
 
         # Freeze the actual design areas for offdesign
@@ -243,11 +263,14 @@ class Heatpump_tespy():
             self.nwk.print_results()
             self.nwk.save('results.csv')
             cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
-            compressor_power = self.cp1.P.val + self.cp2.P.val 
+            cp1 = self.cp1.P.val 
+            cp2 = self.cp2.P.val 
             load = abs(self.cd.Q.val)
             T_evap = self.c1.T.val
             T_cond = self.c4.T.val
             T_delta = T_cond - T_evap
+            eta1 = self.cp1.eta_s.val
+            eta2 = self.cp2.eta_s.val
             ft_x = self.c5.x.val
 
             self.eta1_vals.append(self.cp1.eta_s.val)
@@ -255,6 +278,18 @@ class Heatpump_tespy():
 
             self.m1_vals.append(self.c1.m.val)
             self.m2_vals.append(self.c2a.m.val)
+
+            #Collect data for regression calibration
+            self.x1.append({
+                'Delta T' : self.c2.T.val - self.c1.T.val,
+                'pr' : self.cp1.pr.val,
+                'mdot' : self.c1.m.val
+            })
+            self.x2.append({
+                'Delta T' : self.c3.T.val - self.c2a.T.val,
+                'pr' : self.cp2.pr.val,
+                'mdot' : self.c2a.m.val
+            })
 
             #print("p_cond :",p_cond,"t_cond_out: ",t_cond_out,"t_subcooler :",t_subcooler, "t_subcooling :",t_subcooling,"c4_t :",self.c4.T.val )
             #print("Refrigerant input temp : ",self.c8.T.val, "Refrigerant output temp : ", self.c1.T.val,"Water in temp : ",self.c11.T.val,"Water out temp : ",self.c12.T.val)
@@ -267,10 +302,11 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return cop, compressor_power,load,T_delta,ft_x
+        return cop, cp1,cp2,load,T_delta,ft_x
 
    
-    def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,t_cond:float,sp_comp1:float,p_cond:float,t_subcooler:float,cooling:bool=False):
+    def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,
+             t_cond:float,sp_comp1:float,p_cond:float,t_subcooler:float,cooling:bool=False):
         """This function takes one step in the heatpump simulation and returns the values
 
         Args:
@@ -282,12 +318,11 @@ class Heatpump_tespy():
             _type_: _description_
         """
         if cooling == False:
-            cop, power,load,T_delta,ft_x = self.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out, Q, p_inter, t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            cop, cp1,cp2,load,T_delta,ft_x = self.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out, Q, p_inter, t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
         else:
             cop, power = self.calc_partload_state_cooling(source_temp_in, sink_temp_out,Q)
-        return cop, power,load,T_delta,ft_x
-    def evap_outlet_temperature(self):
-        return self.c12.T.val 
+        return cop, cp1,cp2,load,T_delta,ft_x
+
     def plot(self):
         diagram = FluidPropertyDiagram("R1234ZE")
         diagram.set_unit_system(T="°C", p="bar")
@@ -701,6 +736,113 @@ class Heatpump_tespy():
 
         if return_diagram:
             return diagram
+        plt.close()
+    def generate_temp_plot(self):
+
+        N = 10
+        T_ref_in  = self.c3.T.val
+        T_ref_out = self.c4.T.val
+
+        T_w_in  = self.c21.T.val
+        T_w_out = self.c22.T.val
+        T_w = np.linspace(T_w_out, T_w_in, 20)
+
+        Q_total = abs(self.cd.Q.val)/1e6
+
+        # Desuperheating, condensation, subcooling
+        T_sat = self.t_cond_out
+        T_ref_desup = np.linspace(T_ref_in, T_sat, 5)
+        T_ref_cond = np.ones(10) * T_sat
+        T_ref_sub = np.linspace(T_sat, T_ref_out, 5)
+        T_ref = np.concatenate([T_ref_desup, T_ref_cond, T_ref_sub])
+
+        x = np.linspace(0, Q_total, len(T_ref))
+        
+        # Create main figure
+        fig, ax1 = plt.subplots(figsize=(8,5))
+        
+        # Left y-axis: refrigerant
+        ax1.plot(x, T_ref, 'r-', label='Refrigerant')
+        ax1.set_xlabel('Heat Transfer at Condensor [MW]')
+        ax1.set_ylabel('Refrigerant Temperature at Condensor [°C]', color='r')
+        ax1.tick_params(axis='y', labelcolor='r')
+        ax1.grid(True)
+        
+        # Right y-axis: water
+        ax2 = ax1.twinx()  # create a twin y-axis
+        ax2.plot(x, T_w, 'b--', label='District water at sink')
+        ax2.set_ylabel('Water Temperature [°C]', color='b')
+        ax2.tick_params(axis='y', labelcolor='b')
+
+        # Make both y-axes share the same scale
+        y_min = min(T_ref.min(), T_w.min())
+        y_max = max(T_ref.max(), T_w.max())
+        ax1.set_ylim(y_min-10, y_max+10)
+        ax2.set_ylim(y_min-10, y_max+10)
+        
+        # Optional: combine legends
+        lines_1, labels_1 = ax1.get_legend_handles_labels()
+        lines_2, labels_2 = ax2.get_legend_handles_labels()
+        ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='best')
+
+        t_ref_in  = self.c8.T.val
+        t_ref_out = self.c1.T.val
+        t_ref_ev = np.ones(15) * t_ref_in
+        t_ref_she = np.linspace(t_ref_in, t_ref_out,5)
+        t_ref = np.concatenate([t_ref_ev,t_ref_she])
+
+        t_w_in  = self.c10.T.val
+        t_w_out = self.c12.T.val
+
+        t_w = np.linspace(t_w_in, t_w_out, 20)
+
+        Q_ev = self.c8.m.val * (self.c1.h.val - self.c8.h.val) / 1e3 # in MW
+
+        x1 = np.linspace(0, Q_ev, 20)
+
+        # Create main figure
+        fig, ax3 = plt.subplots(figsize=(8,5))
+        
+        # Left y-axis: refrigerant
+        ax3.plot(x1, t_ref, 'r-', label='Refrigerant')
+        ax3.set_xlabel('Heat Input at evaporator [MW]')
+        ax3.set_ylabel('Refrigerant Temperature at evaporator [°C]', color='r')
+        ax3.tick_params(axis='y', labelcolor='r')
+        ax3.grid(True)
+        
+        # Right y-axis: water
+        ax4 = ax3.twinx()  # create a twin y-axis
+        ax4.plot(x1, t_w, 'b--', label='River water at source')
+        ax4.set_ylabel('Water Temperature [°C]', color='b')
+        ax4.tick_params(axis='y', labelcolor='b')
+
+        # Make both y-axes share the same scale
+        Y_min = min(t_ref.min(), t_w.min())
+        Y_max = max(t_ref.max(), t_w.max())
+        ax3.set_ylim(Y_min-10, Y_max+10)
+        ax4.set_ylim(Y_min-10, Y_max+10)
+
+        # Optional: combine legends
+        lines_3, labels_3 = ax3.get_legend_handles_labels()
+        lines_4, labels_4 = ax4.get_legend_handles_labels()
+        ax3.legend(lines_3 + lines_4, labels_3 + labels_4, loc='best')
+        
+        heat, T_hot, T_cold, heat_section, td_log = self.cd.calc_sections()
+        print(T_cold-273.15)
+        
+        plt.show()
+    def generate_temp_plot2(self):
+        heat, T_hot, T_cold, heat_section, td_log = self.cd.calc_sections()
+
+        fig, ax = plt.subplots(figsize=(8,5))
+        ax.plot(heat/1e6, T_hot-273.15, label = 'Refrigerant')
+        ax.plot(heat/1e6, T_cold-273.15, label = 'District Water')
+        ax.set_xlabel('Heat Transfer at Condensor [MW]')
+        ax.set_ylabel('Temperature at Condensor [°C]')
+        ax.legend()
+        plt.grid()
+        plt.show()
+
 
 if __name__ == "__main__":
     # Define the parameters dictionary
