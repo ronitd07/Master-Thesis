@@ -144,12 +144,12 @@ class Heatpump_tespy():
         )
         # saves the char line plot
         line1.plot(
-                path="charline.png",
+                path="charline1.png",
                 title="Custom Characteristic Line comp1",
                 xlabel="x",
                 ylabel="y"
         )
-        gen_char = load_custom_char('eta_s_test', CharLine)
+        #gen_char = load_custom_char('eta_s_test', CharLine)
         self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line1}, offdesign = ['eta_s_char'])
 
         #Charline for compressor2 performance
@@ -160,7 +160,7 @@ class Heatpump_tespy():
         )
         # saves the char line plot
         line2.plot(
-                path="charline.png",
+                path="charline2.png",
                 title="Custom Characteristic Line comp2",
                 xlabel="x",
                 ylabel="y"
@@ -193,7 +193,7 @@ class Heatpump_tespy():
         try:
 
             #solve the design case
-            self.nwk.solve("design",print_results=True)
+            self.nwk.solve("design",print_results=False)
         except ValueError as e:
             print(e)
 
@@ -206,12 +206,14 @@ class Heatpump_tespy():
         self.cd.set_attr(Q=-Q_design) #
         #save data
         self.nwk.solve("design")
-        self.nwk.print_results()
+        #self.nwk.print_results()
 
         self.m1_design = self.c1.m.val
         self.m1_vals.append(self.m1_design)
         self.m2_design = self.c2a.m.val
         self.m2_vals.append(self.m2_design)
+
+        self.t1_design = self.c1.T.val + 273.15        
 
 
         # Get the design heat transfer coefficient to be used in offdesign case
@@ -260,7 +262,7 @@ class Heatpump_tespy():
         try:
 
             self.nwk.solve("offdesign", design_path="data/process_data/hp_design_"+self.name+".json")
-            self.nwk.print_results()
+            #self.nwk.print_results()
             self.nwk.save('results.csv')
             cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
             cp1 = self.cp1.P.val 
@@ -272,6 +274,17 @@ class Heatpump_tespy():
             eta1 = self.cp1.eta_s.val
             eta2 = self.cp2.eta_s.val
             ft_x = self.c5.x.val
+            m1 = self.c1.m.val
+            m2= self.c2a.m.val
+            pr1 = self.cp1.pr.val
+            pr2 = self.cp2.pr.val
+            t_in_cp1 = self.c1.T.val
+            t_in_cp2 = self.c2a.T.val
+            p_in_cp1 = self.c1.p.val
+            p_in_cp2 = self.c2a.p.val
+
+            #X= np.sqrt(self.t1_design/(self.c1.T.val+273.15))
+            #print(f'speedline X = {X}')            
 
             self.eta1_vals.append(self.cp1.eta_s.val)
             self.eta2_vals.append(self.cp2.eta_s.val)
@@ -291,9 +304,6 @@ class Heatpump_tespy():
                 'mdot' : self.c2a.m.val
             })
 
-            #print("p_cond :",p_cond,"t_cond_out: ",t_cond_out,"t_subcooler :",t_subcooler, "t_subcooling :",t_subcooling,"c4_t :",self.c4.T.val )
-            #print("Refrigerant input temp : ",self.c8.T.val, "Refrigerant output temp : ", self.c1.T.val,"Water in temp : ",self.c11.T.val,"Water out temp : ",self.c12.T.val)
-            #print("Refrigerant coondensor input temp : ",self.c3.T.val, "Refrigerant condensor output temp : ", self.c4.T.val,"Sink Water in temp : ",self.c21.T.val,"Sink Water out temp : ",self.c22.T.val)
         except Exception as e:
             # mark as infeasible — record error and continue
             print(e)
@@ -302,7 +312,8 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return cop, cp1,cp2,load,T_delta,ft_x
+        #return cop, cp1,cp2,load,T_delta,ft_x,eta1,eta2,m1,m2,pr1,pr2
+        return t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2
 
    
     def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,

@@ -137,49 +137,60 @@ class Heatpump_tespy():
         Q_design = self.heat_design
         self.cd.set_attr(Q=-100e3) # 100kW as a starting value
 
-        #Charline for compressor performance
-        map = CharMap(x= [0.810, 0.870, 0.946, 0.971, 1, 1.029, 1.062],
-                y= [[0.460, 0.481, 0.502, 0.523, 0.543,
-                       0.562,0.583, 0.598, 0.606, 0.612],
-                      [0.590, 0.605, 0.620, 0.640, 0.660,
-                       0.685, 0.703, 0.710, 0.711, 0.713],
-                      [0.767, 0.805, 0.838, 0.859, 0.87,
-                       0.876, 0.878, 0.878, 0.879, 0.88],
-                      [0.874, 0.908, 0.93, 0.943, 0.953,
-                       0.961, 0.962, 0.963, 0.963, 0.964],
-                      [0.948, 0.974, 0.987, 0.995, 1.0,
-                       1.002, 1.005, 1.005, 1.006, 1.006],
-                      [1.014, 1.017, 1.02, 1.023, 1.026,
-                       1.028, 1.03, 1.032, 1.034, 1.036],
-                      [1.045, 1.047, 1.049, 1.051, 1.052,
-                       1.053, 1.054, 1.054, 1.055, 1.056]],
-                z= [[0.872, 0.885, 0.898, 0.911, 0.925,
-                        0.94, 0.945, 0.926, 0.903, 0.879],
-                       [0.887, 0.909, 0.93, 0.947, 0.963,
-                        0.971, 0.965, 0.939, 0.913, 0.887],
-                       [0.891, 0.918, 0.946, 0.973, 1.001,
-                        1.014, 1.015, 0.986, 0.955, 0.925],
-                       [0.977, 0.977, 0.981, 0.995, 1.007,
-                        1.002, 0.981, 0.961, 0.94, 0.92],
-                       [0.956, 0.959, 0.969, 0.984, 1.0,
-                        0.985, 0.967, 0.95, 0.932, 0.914],
-                       [0.948, 0.959, 0.962, 0.949, 0.935,
-                        0.922, 0.908, 0.895, 0.881, 0.868],
-                       [0.879, 0.888, 0.898, 0.907, 0.916,
-                        0.924, 0.915, 0.906, 0.896, 0.887]])
+        #Charmap for turbocompressor performance
+        map_pr1 = CharMap(x= [1.0],
+                    y= [[0.24456472, 0.32391662 ,0.40326852 ,0.48262042, 0.56197231, 0.64132421,
+                    0.72067611, 0.80002801, 0.87937991 ,0.9587318]],
+                    z= [[ 0.54413614 ,0.54715279, 0.55535514, 0.56874319 ,0.58731694, 0.61107638,
+                    0.64002153, 0.67415238, 0.71346893, 0.75797117]]
+                    )
+        map_pr2 = CharMap(x= [1.0],
+                    y= [[0.19070308, 0.24982871, 0.30895435, 0.36807998, 0.42720561, 0.48633125,
+                    0.54545688, 0.60458252 ,0.66370815, 0.72283379]],
+                    z= [[ 0.86155669, 0.8509579 , 0.84642257, 0.84795068 ,0.85554225, 0.86919727,
+                    0.88891574 ,0.91469767 ,0.94654304 ,0.98445187]]
+                    )
+        map_eta1 = CharMap(x= [1.0],
+                    y= [[0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ]],
+                    z= [[ 0.40120622 ,0.62875276, 0.7918917 , 0.89062304 ,0.92494679]]
+                    )  
+        map_eta2 = CharMap(x= [1.0],
+                    y= [[0.19070308 ,0.32373575 ,0.45676843 ,0.58980111, 0.72283379 ]],
+                    z= [[ 0.51114391, 0.6331605 , 0.71857524 ,0.76738812 ,0.77959914]]
+                    ) 
+        map_eta = CharMap(x= [0.5],
+                    y= [[0,1]],
+                    z= [[ 1,1]]
+                    )                
         # saves the char line plot
-        map.plot(
-                path="default_charmap.png",
+        map_pr1.plot(
+                path="map_pr1.png",
                 title="Custom Characteristic Map",
                 xlabel="Y",
                 ylabel="Z"
         )
+        map_pr2.plot(
+                path="map_pr2.png",
+                title="Custom Characteristic Map",
+                xlabel="Y",
+                ylabel="Z"
+        ) 
+        map_eta1.plot(
+                path="map_eta1.png",
+                title="Custom Characteristic Map",
+                xlabel="Y",
+                ylabel="Z"
+        )     
+        map_eta2.plot(
+                path="map_eta2.png",
+                title="Custom Characteristic Map",
+                xlabel="Y",
+                ylabel="Z"
+        )                     
         #gen_char = load_custom_char('eta_s_test', CharLine)
-        self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],offdesign = ['char_map_eta_s','char_map_pr'])
-        self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], offdesign = ['char_map_eta_s','char_map_pr'])
 
-        #self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],offdesign = ['eta_s_char'])
-        #self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], offdesign = ['eta_s_char'])
+        self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta1}, char_map_pr = {'char_func' : map_pr1}, offdesign = ['char_map_eta_s','char_map_pr'])
+        self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta2}, char_map_pr = {'char_func' : map_pr2},  offdesign = ['char_map_eta_s','char_map_pr'])
 
         #self.cp1.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'] )
         self.eta1_vals.append(self.eta_compressor)
@@ -208,7 +219,7 @@ class Heatpump_tespy():
         try:
 
             #solve the design case
-            self.nwk.solve("design",print_results=True)
+            self.nwk.solve("design",print_results=False)
         except ValueError as e:
             print(e)
 
@@ -221,13 +232,14 @@ class Heatpump_tespy():
         self.cd.set_attr(Q=-Q_design) #
         #save data
         self.nwk.solve("design")
-        self.nwk.print_results()
+        #self.nwk.print_results()
 
         self.m1_design = self.c1.m.val
         self.m1_vals.append(self.m1_design)
         self.m2_design = self.c2a.m.val
         self.m2_vals.append(self.m2_design)
 
+        self.t1_design = self.c1.T.val + 273.15
 
         # Get the design heat transfer coefficient to be used in offdesign case
         self.cond_UA_design = self.cd.UA.val # W/ K
@@ -266,6 +278,7 @@ class Heatpump_tespy():
         self.c4.set_attr(td_bubble=t_subcooling)
         self.cp1.set_attr(igva='var')
         self.cp2.set_attr(igva='var')
+        
         # After design solves in partload_heat_pump()
 
         # Freeze the actual design areas for offdesign
@@ -275,7 +288,7 @@ class Heatpump_tespy():
         try:
 
             self.nwk.solve("offdesign",  design_path="data/process_data/hp_design_"+self.name+".json")
-            self.nwk.print_results()
+            #self.nwk.print_results()
             self.nwk.save('results.csv')
             cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
             cp1 = self.cp1.P.val 
@@ -296,6 +309,9 @@ class Heatpump_tespy():
 
             m1=self.c1.m.val
             m2=self.c2a.m.val
+
+            X= np.sqrt(self.t1_design/(self.c1.T.val+273.15))
+            print(f'speedline X = {X}')
 
             #Collect data for regression calibration
             self.x1.append({
@@ -320,7 +336,7 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return eta1,eta2,m1,m2
+        return eta1,eta2,m1,m2,X
 
 
     def plot(self):
@@ -847,7 +863,7 @@ class Heatpump_tespy():
 if __name__ == "__main__":
     # Define the parameters dictionary
     params_hp = {
-        "name": "MyHeatPump",
+        "name": "HeatPump",
         "working_fluid": "R1234ZE",
         "cooling_mode #not implemented": False,
         "eta_compressor": 0.85,

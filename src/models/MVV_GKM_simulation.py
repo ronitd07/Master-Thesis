@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import CoolProp.CoolProp as CP
 #from heatpump_MVV_GKM import Heatpump_tespy
 from heatpump_MVV_GKM_subcooling import Heatpump_tespy
+#from heatpump_MVV_GKM_subcooling_ev_char import Heatpump_tespy
 #from heatpump_MVV_GKM_compressorP import Heatpump_tespy
 #from heatpump_MVV_GKM_polynomialComp import Heatpump_tespy
 #from models.mosaik_models.restructure_heatpump_tespy import HeatPump
@@ -97,7 +98,7 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(0,n_steps,10), desc="Calculation"):
+    for step in tqdm(range(0,n_steps,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -117,24 +118,20 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            cop, cp1,cp2,load,T_delta,ft_x= heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
 
             results.append({
                 'datetime': current_time,
-                'Evaporator temp' : t_evap,
-                'Souce_temp_in':  source_temp_in,
-                'Souce_temp_out':  source_temp_out,
-                'Condensor temp' : t_cond,
-                'Condensor pressure': p_cond,
-                'Sink_temp_in': sink_temp_in,
-                'Sink_temp_out': sink_temp_out,
-                'COP': cop,
-                'Compressor Power1 [W]': cp1,
-                'Compressor Power2 [W]': cp2,
-                'Condensor load[W]' : load,
-                'Temp difference' : T_delta,
-                'Intermediate pressure [bar]' : p_inter,
-                'Vapour fraction Flash tank' : ft_x,
+                'Temp in cp1' : t_in_cp1,
+                'Temp in cp2' : t_in_cp2,
+                'Pressure in cp1' : p_in_cp1,
+                'Pressure in cp2' : p_in_cp2,
+                'Efficiency comp1' : eta1,
+                'Efficiency comp2' : eta2,
+                'Mass flow comp1' : m1,
+                'Mass flow comp2' : m2,
+                'pr comp1' : pr1,
+                'pr comp2' : pr2,
                 'error': None 
             })
         except Exception as e:
@@ -142,10 +139,10 @@ def simulation_loop():
             print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
             raise e
     results_df = pd.DataFrame(results)
-    results_df.to_csv('simulation_results.csv', index=False) # this is for full 13k data run
+    #results_df.to_csv('simulation_results.csv', index=False) # this is for full 13k data run
     #results_df.to_csv('simulation_results.csv', index=False)
-    average_COP = results_df['COP'].mean()
-    print("Average COP:", average_COP) 
+    #average_COP = results_df['COP'].mean()
+    #print("Average COP:", average_COP) 
     print("Nominal load (MW):", Q_nominal)
 
     '''

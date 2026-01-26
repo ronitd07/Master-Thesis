@@ -98,12 +98,12 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(0,1,10), desc="Calculation"):
+    for step in tqdm(range(0,1,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
         source_temp_in = source_in_temp.iloc[step]
-        source_temp_out = source_out_temp.iloc[step]
+        source_temp_out = source_out_temp.iloc[step]  
         Q_load = thermal_loads.iloc[step]
         p_inter = inter_p.iloc[step]
         t_evap = evap_temp.iloc[step]
@@ -118,7 +118,7 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            cop,eta2,m1,m2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            cop,eta2,m1,m2,X = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
 
             results.append({
                 'datetime': current_time,
@@ -128,7 +128,8 @@ def simulation_loop():
                 'Condensor temp' : t_cond,
                 'Condensor pressure': p_cond,
                 'Sink_temp_in': sink_temp_in,
-                'Sink_temp_out': sink_temp_out
+                'Sink_temp_out': sink_temp_out,
+                'Speed line X' : X
             })
         except Exception as e:
             print(f"\n❌ Error at step {step}, time {current_time}")

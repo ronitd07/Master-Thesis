@@ -256,6 +256,8 @@ class Heatpump_tespy():
             T_delta = T_cond - T_evap
             eta1 = self.cp1.eta_s.val
             eta2 = self.cp2.eta_s.val
+            pr1 = self.cp1.pr.val
+            pr2 = self.cp2.pr.val
             ft_x = self.c5.x.val
 
             self.eta1_vals.append(self.cp1.eta_s.val)
@@ -263,6 +265,7 @@ class Heatpump_tespy():
 
             self.m1_vals.append(self.c1.m.val)
             self.m2_vals.append(self.c2a.m.val)
+            
 
             m1=self.c1.m.val
             m2=self.c2a.m.val
@@ -290,7 +293,7 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return eta1,eta2,m1,m2
+        return eta1,eta2,m1,m2,pr1,pr2
 
 
     def plot(self):
