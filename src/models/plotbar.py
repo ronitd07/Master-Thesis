@@ -15,8 +15,9 @@ df2 = pd.read_csv('simulation_results.csv',sep=',')
 #fhgCD.set_matplotlib_style("scientific", "official")
 
 df1_10 = df1.iloc[::10]
+df2_10 = df2.iloc[::10]
 # Absolute error
-error_abs = df2['COP'].values - df1_10['Column4'].values
+error_abs = df2['cop'].values - df1_10['Column4'].values
 
 fig, ax = plt.subplots(figsize=(8, 4))
 
@@ -27,6 +28,7 @@ ax.set_ylabel('Frequency')
 ax.set_title('Frequency distribution of residuals of COP')
 ax.grid(True)
 ax.legend()
+ax.set_xlim(-0.5,0.5)
 
 plt.tight_layout()
 plt.show()

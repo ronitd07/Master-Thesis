@@ -20,39 +20,18 @@ def simulation_loop():
     params_hp = {
         "name": "MyHeatPump",
         "working_fluid": "R1234ZE",
-        "cooling_mode #not implemented": False,
-        "eta_compressor": 0.85,
+        "eta_compressor1": 0.8,
+        "eta_compressor2": 0.75,
         "eta_pump": 0.7,
         "ttd_heat_exchanger": 5.0,
         "heating_system_feed_temp": 101.32,
-        "heating_system_return_temp": 57.01,
-        "cooling_system_feed_temp": 10.0,
-        "cooling_system_return_temp": 15.0,        
+        "heating_system_return_temp": 57.01,      
         "tamb_design": 5.35,
         "heat_design": 22e6,        # 22 MW as nominal load
-        "cooling_Q_design": 50e3,    # 50 kW
-        "cooling_tamb_design": 25.0
-    }
-    params_cooling = {
-        "name": "hx_cooling",
-        "eta_pump": 0.85,
-        "primary_side_fluid": "Water",
-        "secondary_side_fluid": "INCOMP::MPG[0.2]|mass",
-        "primary_side_feed_temp": 25,
-        "primary_side_return_temp": 15,
-        "pr1_heat_exchanger": 0.99,
-        "pr2_heat_exchanger": 0.99,
-        "ttd_u_heat_exchanger": 2,
-        "design":
-        {
-            "Q_load": -323e3,
-            "dotm_pri": 7.6
-        }
     }
     #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
     df = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-    #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
-    df2 = pd.read_csv('corrected_efficiency.csv',sep=',')
+    #df = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
 
 
     thermal_loads = df['Column30'] * 1e6 # in Watts (Q at condenser)
@@ -85,9 +64,6 @@ def simulation_loop():
     # Compressor1 inlet superheat
     comp1_sp = df['Column8'].abs() # in °C
 
-    #Compressor real powers
-
-
     heatpump_model = Heatpump_tespy(params_hp)
 
     print("Heatpump design mode successful")
@@ -98,7 +74,8 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(0,1,1), desc="Calculation"):
+
+    for step in tqdm(range(0,n_steps,10), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -113,30 +90,49 @@ def simulation_loop():
         t_subcooler = subcooler_t.iloc[step]
         cp1_real = df['Column37'].iloc[step] # in kW
         cp2_real = df['Column38'].iloc[step] # in kW
-        #cp1_eff = df2['eta_s1_corrected_df'].iloc[step]
-        #cp2_eff = df2['eta_s2_corrected_df'].iloc[step]
+
 
         try:
             # Step heat pump simulation
-            cop,eta2,m1,m2,X = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            eta1,eta2,m1,m2,X,cop,cp1,cp2,igva1,igva2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
 
             results.append({
                 'datetime': current_time,
-                'Evaporator temp' : t_evap,
-                'Souce_temp_in':  source_temp_in,
-                'Souce_temp_out':  source_temp_out,
-                'Condensor temp' : t_cond,
-                'Condensor pressure': p_cond,
-                'Sink_temp_in': sink_temp_in,
-                'Sink_temp_out': sink_temp_out,
-                'Speed line X' : X
+                'eta1' : eta1,
+                'eta2':  eta2,
+                'm1':  m1,
+                'm2' : m2,
+                'cop': cop,
+                'cop_given' : df['Column4'].iloc[step],
+                'cp1': cp1,
+                'cp2': cp2,
+                'Speed line X' : X,
+                'igva1' : igva1,
+                'igva2' : igva2,
+                'status': 'passed'
             })
         except Exception as e:
-            print(f"\n❌ Error at step {step}, time {current_time}")
-            print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
-            raise e
+            print(f"❌ Failed at step {step}, time {current_time}: {e}")
+
+            results.append({
+                'datetime': current_time,
+                'eta1': None,
+                'eta2': None,
+                'm1': None,
+                'm2': None,
+                'cop': None,
+                'cp1': None,
+                'cp2': None,
+                'Speed line X': None,
+                'igva1' : None,
+                'igva2' : None,
+                'status': 'failed',
+                'error': str(e)
+            })
+
+            continue
     results_df = pd.DataFrame(results)
-    results_df.to_csv('charmap_simulation_results.csv', index=False) # this is for full 13k data run
+    results_df.to_csv('charmap_simulation_results1.csv', index=False) # this is for full 13k data run
     #results_df.to_csv('simulation_results.csv', index=False)
     #average_COP = results_df['COP'].mean()
     #print("Average COP:", average_COP) 

@@ -3,7 +3,7 @@
 heat pump model of MVV GKM Manheim using real compressor Power
 
 """
-from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,PolynomialCompressor
+from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,PolynomialCompressor,TurboCompressor
 from tespy.tools.characteristics import CharLine
 from tespy.tools.characteristics import load_custom_char
 from tespy.connections import Connection, Ref
@@ -198,6 +198,9 @@ class Heatpump_tespy():
         self.m2_design = self.c2a.m.val
         self.m2_vals.append(self.m2_design)
 
+        self.t1_design = self.c1.T.val 
+        self.t2a_design = self.c2a.T.val 
+
 
         # Get the design heat transfer coefficient to be used in offdesign case
         self.cond_UA_design = self.cd.UA.val # W/ K
@@ -236,6 +239,13 @@ class Heatpump_tespy():
         self.c4.set_attr(td_bubble=t_subcooling)
         self.cp1.set_attr(P=cp1_real*1e3)
         self.cp2.set_attr(P=cp2_real*1e3)
+        #self.c1.set_attr(m=78.17)
+        #self.c2a.set_attr(m=97.27)
+        #self.cp1.set_attr(igva='var')
+        #self.cp2.set_attr(igva='var')
+        #self.c1.set_attr(T=self.t1_design )
+        #self.c2a.set_attr(T=self.t2a_design )
+        print(self.cp1.igva.val)
         # After design solves in partload_heat_pump()
 
         # Freeze the actual design areas for offdesign
@@ -265,7 +275,9 @@ class Heatpump_tespy():
 
             self.m1_vals.append(self.c1.m.val)
             self.m2_vals.append(self.c2a.m.val)
-            
+
+            X= np.sqrt((self.t1_design + 273.15)/(self.c1.T.val+273.15))
+            x= np.sqrt((self.t2a_design + 273.15)/(self.c2a.T.val+273.15))
 
             m1=self.c1.m.val
             m2=self.c2a.m.val
@@ -293,7 +305,7 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return eta1,eta2,m1,m2,pr1,pr2
+        return eta1,eta2,m1,m2,pr1,pr2,X,x
 
 
     def plot(self):

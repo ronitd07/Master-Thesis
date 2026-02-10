@@ -21,7 +21,7 @@ def mape(y_measured, y_model):
     y_model = np.array(y_model)
     return np.mean(np.abs((y_model - y_measured) / y_measured)) * 100
 
-y_measured = df1['Column4'][::10]  
+y_measured = df1['Column4'][:10970:10]  
 y_model    = df2['COP']
 
 rmse_value = rmse(y_measured, y_model)

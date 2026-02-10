@@ -114,7 +114,7 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            eta1,eta2,m1,m2,pr1,pr2= heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler,cp1_real,cp2_real)
+            eta1,eta2,m1,m2,pr1,pr2,X,x= heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler,cp1_real,cp2_real)
 
             results.append({
                 'datetime': current_time,
@@ -124,6 +124,8 @@ def simulation_loop():
                 'Comp2 m' : m2,
                 'pr1' : pr1,
                 'pr2' : pr2,
+                'X' : X,
+                'x' : x,
                 'error': None 
             })
         except Exception as e:
@@ -131,7 +133,7 @@ def simulation_loop():
             print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
             raise e
     results_df = pd.DataFrame(results)
-    results_df.to_csv('compressor_results.csv', index=False) # this is for full 13k data run
+    #results_df.to_csv('compressor_results.csv', index=False) # this is for full 13k data run
     #results_df.to_csv('simulation_results.csv', index=False)
 
 

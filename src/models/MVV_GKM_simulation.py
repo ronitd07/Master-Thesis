@@ -51,7 +51,7 @@ def simulation_loop():
     }
     #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
     df = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-    #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
+    #df = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
     df2 = pd.read_csv('corrected_efficiency.csv',sep=',')
 
 
@@ -98,7 +98,7 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(0,n_steps,1), desc="Calculation"):
+    for step in tqdm(range(0,n_steps,10), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -118,7 +118,7 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2,cop = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
 
             results.append({
                 'datetime': current_time,
@@ -132,6 +132,7 @@ def simulation_loop():
                 'Mass flow comp2' : m2,
                 'pr comp1' : pr1,
                 'pr comp2' : pr2,
+                'cop' : cop,
                 'error': None 
             })
         except Exception as e:
@@ -139,7 +140,7 @@ def simulation_loop():
             print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
             raise e
     results_df = pd.DataFrame(results)
-    #results_df.to_csv('simulation_results.csv', index=False) # this is for full 13k data run
+    results_df.to_csv('simulation_results.csv', index=False) # this is for full 13k data run
     #results_df.to_csv('simulation_results.csv', index=False)
     #average_COP = results_df['COP'].mean()
     #print("Average COP:", average_COP) 

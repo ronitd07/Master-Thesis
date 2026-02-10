@@ -3,8 +3,8 @@
 heat pump model of MVV GKM Manheim with subcooling
 
 """
-from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger
-from tespy.tools.characteristics import CharLine
+from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,TurboCompressor
+from tespy.tools.characteristics import CharLine,CharMap
 from tespy.tools.characteristics import load_custom_char
 from tespy.connections import Connection, Ref
 from tespy.networks import Network
@@ -136,6 +136,23 @@ class Heatpump_tespy():
         Q_design = self.heat_design
         self.cd.set_attr(Q=-100e3) # 100kW as a starting value
 
+        map_eta1 = CharMap(x= [0.810,1.0],
+                    y= [[0.460,  0.502,  0.543,
+                       0.583,  0.606],
+                       [0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ]],
+                    z= [[0.872, 0.898,  0.925,
+                        0.945, 0.903],
+                        [ 0.40120622 ,0.62875276, 0.7918917 , 0.89062304 ,0.92494679]]
+                    )  
+        map_eta2 = CharMap(x= [0.810,1.0],
+                    y= [[0.460,  0.502,  0.543,
+                       0.583,  0.606],
+                       [0.19070308 ,0.32373575 ,0.45676843 ,0.58980111, 0.72283379 ]],
+                    z= [[0.872, 0.898,  0.925,
+                        0.945, 0.903],
+                        [ 0.51114391, 0.6331605 , 0.71857524 ,0.76738812 ,0.77959914]]
+                    ) 
+
         #Charline for compressor1 performance
         line1 = CharLine(
         x=[0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ] ,     # Mass flow ratio
@@ -150,7 +167,8 @@ class Heatpump_tespy():
                 ylabel="y"
         )
         #gen_char = load_custom_char('eta_s_test', CharLine)
-        self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line1}, offdesign = ['eta_s_char'])
+        #self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],  offdesign = ['eta_s_char']) # default charline
+        self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line1}, offdesign = ['eta_s_char']) # fitted char line
 
         #Charline for compressor2 performance
         line2 = CharLine(
@@ -165,7 +183,11 @@ class Heatpump_tespy():
                 xlabel="x",
                 ylabel="y"
         )
-        self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line2}, offdesign = ['eta_s_char'])
+        #self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], offdesign = ['eta_s_char']) # default charline
+        self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line2}, offdesign = ['eta_s_char'])  # fitted char line
+
+        #self.cp1.set_attr(igva=0,eta_s=self.eta_compressor, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta1},  offdesign = ['char_map_eta_s','igva'])
+        #self.cp2.set_attr(igva=0,eta_s=self.eta_compressor, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta2},   offdesign = ['char_map_eta_s','igva'])
 
         #self.cp1.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'] )
         self.eta1_vals.append(self.eta_compressor)
@@ -199,7 +221,7 @@ class Heatpump_tespy():
 
 
         #vary heat exchanger efficiency
-        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger)
+        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger,offdesign = ['kA_char'])
         self.c1.set_attr(T=None)
         self.cd.set_attr(ttd_u=self.ttd_heat_exchanger)
         self.c3.set_attr(T=None)
@@ -246,7 +268,7 @@ class Heatpump_tespy():
         self.c1.set_attr(td_dew = sp_comp1,x=None)
         #self.cd.set_attr(ttd_u=None, UA = self.cond_UA_design)
         self.cd.set_attr(ttd_u=None,  UA = None)
-        self.ev.set_attr(ttd_l=None, kA = self.ev_kA_design)
+        self.ev.set_attr(ttd_l=None)
         self.c3.set_attr(p=p_cond)
         self.t_cond_out = PropsSI("T", "P", self.c3.p.val*1e5, "Q", 0, self.working_fluid) - 273.15
         t_subcooling = self.t_cond_out-t_subcooler
@@ -313,7 +335,7 @@ class Heatpump_tespy():
             T_delta = None
             m_flow = 0
         #return cop, cp1,cp2,load,T_delta,ft_x,eta1,eta2,m1,m2,pr1,pr2
-        return t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2
+        return t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2,cop
 
    
     def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,
