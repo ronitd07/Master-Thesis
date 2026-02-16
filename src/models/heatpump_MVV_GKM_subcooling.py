@@ -6,6 +6,7 @@ heat pump model of MVV GKM Manheim with subcooling
 from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,TurboCompressor
 from tespy.tools.characteristics import CharLine,CharMap
 from tespy.tools.characteristics import load_custom_char
+from tespy.tools.characteristics import load_default_char as ldc
 from tespy.connections import Connection, Ref
 from tespy.networks import Network
 from fluprodia import FluidPropertyDiagram
@@ -136,63 +137,70 @@ class Heatpump_tespy():
         Q_design = self.heat_design
         self.cd.set_attr(Q=-100e3) # 100kW as a starting value
 
-        map_eta1 = CharMap(x= [0.810,1.0],
-                    y= [[0.460,  0.502,  0.543,
-                       0.583,  0.606],
-                       [0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ]],
-                    z= [[0.872, 0.898,  0.925,
-                        0.945, 0.903],
-                        [ 0.40120622 ,0.62875276, 0.7918917 , 0.89062304 ,0.92494679]]
-                    )  
-        map_eta2 = CharMap(x= [0.810,1.0],
-                    y= [[0.460,  0.502,  0.543,
-                       0.583,  0.606],
-                       [0.19070308 ,0.32373575 ,0.45676843 ,0.58980111, 0.72283379 ]],
-                    z= [[0.872, 0.898,  0.925,
-                        0.945, 0.903],
-                        [ 0.51114391, 0.6331605 , 0.71857524 ,0.76738812 ,0.77959914]]
-                    ) 
+        m1_design = 119.71756169753175
+        e1_design = 0.85
+        df = pd.read_csv('charline_simulation2_results.csv',sep=',')
+        x = df['Comp1 m'] / m1_design
+        y = df['Comp1 eff'] / e1_design
+        line1 = self.build_charline(x, y)
 
         #Charline for compressor1 performance
-        line1 = CharLine(
-        x=[0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ] ,     # Mass flow ratio
+        #line1 = CharLine(
+        #x=[0.24456472, 0.42310649, 0.60164826, 0.78019003, 0.9587318 ] ,     # Mass flow ratio
+        #x = [0.26695845, 0.3403187,  0.41367894, 0.48703919, 0.56039944 ,0.63375969, 0.70711993 ,0.78048018 ,0.85384043, 0.92720067],
+        #x = [0.24456472, 0.32391662, 0.40326852, 0.48262042 ,0.56197231, 0.64132421, 0.72067611, 0.80002801, 0.87937991 ,0.9587318 ] , # new Power divide rule
+        #x = [0.25454244, 0.32930047, 0.4040585,  0.47881652 ,0.55357455, 0.62833258,0.70309061, 0.77784863, 0.85260666, 0.92736469] ,# Optimization1
+
+
+
         #y=[0.373059 ,  0.62864322, 0.79268357 ,0.88967366, 0.94410716] # deg 3 isentropic efficiency
-        y=[0.40120622 ,0.62875276, 0.7918917 , 0.89062304 ,0.92494679] # deg 2 isentropic efficiency
-        )
+        #y=[0.40120622 ,0.62875276, 0.7918917 , 0.89062304 ,0.92494679] # deg 2 isentropic efficiency
+        #y = [0.42710581, 0.52535663, 0.6126886 , 0.68910171, 0.75459596, 0.80917135, 0.85282788 ,0.88556555 ,0.90738436 ,0.91828432] 
+        #y = [0.35023254, 0.47338167, 0.57969181, 0.66916296 ,0.74179513, 0.79758831, 0.8365425 , 0.8586577  ,0.86393392 ,0.85237116]
+        # y = [0.36198781, 0.47609299, 0.57546527 ,0.66010464 ,0.73001112 ,0.78518469, 0.82562537 ,0.85133314, 0.86230801, 0.85854998]  ,extrapolate=True # Optimization1
+        #)
         # saves the char line plot
-        line1.plot(
-                path="charline1.png",
-                title="Custom Characteristic Line comp1",
-                xlabel="x",
-                ylabel="y"
-        )
+        #line1.plot(
+        #        path="charline.png",
+        #        title="Custom Characteristic Line comp1",
+        #        xlabel="x",
+        #        ylabel="y"
+        #)
         #gen_char = load_custom_char('eta_s_test', CharLine)
         #self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],  offdesign = ['eta_s_char']) # default charline
         self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line1}, offdesign = ['eta_s_char']) # fitted char line
 
+        m2_design = 189.44486415294614
+        e2_design = 0.85
+        x = df['Comp2 m'] / m2_design
+        y = df['Comp2 eff'] / e2_design
+        line2 = self.build_charline(x, y)
+
         #Charline for compressor2 performance
-        line2 = CharLine(
-        x=[0.19070308 ,0.32373575 ,0.45676843 ,0.58980111, 0.72283379]  ,     # Mass flow ratio
+        #line2 = CharLine(
+        #x=[0.19070308 ,0.32373575 ,0.45676843 ,0.58980111, 0.72283379]  ,     # Mass flow ratio
+        #x = [0.21314136, 0.26761825, 0.32209515 ,0.37657204 ,0.43104894, 0.48552583,0.54000273 ,0.59447962 ,0.64895652 ,0.70343341] ,
+        #x =  [0.19070308, 0.24982871 ,0.30895435 ,0.36807998 ,0.42720561, 0.48633125,0.54545688, 0.60458252, 0.66370815 ,0.72283379] ,
+        #x = [0.2068893 , 0.26207469 ,0.31726009, 0.37244548 ,0.42763088 ,0.48281627,0.53800166, 0.59318706 ,0.64837245, 0.70355785] , #Optimization1
+
+
         #y=[0.48490718 ,0.63255384 ,0.7194824 , 0.76619529 ,0.79319494]# deg 3 isentropic efficiency
-        y=[0.51114391, 0.6331605 , 0.71857524 ,0.76738812 ,0.77959914]  # deg 2 isentropic efficiency
-        )
+        #y=[0.51114391, 0.6331605 , 0.71857524 ,0.76738812 ,0.77959914]  # deg 2 isentropic efficiency
+        #y = [0.53055528, 0.58269863, 0.62864449 ,0.66839285, 0.70194373, 0.72929712,0.75045302 ,0.76541143 ,0.77417236 ,0.77673579],
+        #y = [0.50745691 ,0.56777141 ,0.62227068 ,0.67095472 ,0.71382353 ,0.75087712,0.78211548 ,0.80753861 ,0.82714651, 0.84093918]
+        #y = [0.52694287 ,0.58236753, 0.63259174, 0.6776155,  0.71743881, 0.75206166,0.78148406, 0.80570601 ,0.82472751 ,0.83854856],extrapolate=True # Optimization1
+        #)
         # saves the char line plot
-        line2.plot(
-                path="charline2.png",
-                title="Custom Characteristic Line comp2",
-                xlabel="x",
-                ylabel="y"
-        )
+        #line2.plot(
+        #        path="charline.png",
+        #        title="Custom Characteristic Line comp2",
+        #        xlabel="x",
+        #        ylabel="y")
         #self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], offdesign = ['eta_s_char']) # default charline
         self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], eta_s_char={'char_func': line2}, offdesign = ['eta_s_char'])  # fitted char line
 
-        #self.cp1.set_attr(igva=0,eta_s=self.eta_compressor, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta1},  offdesign = ['char_map_eta_s','igva'])
-        #self.cp2.set_attr(igva=0,eta_s=self.eta_compressor, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta2},   offdesign = ['char_map_eta_s','igva'])
-
-        #self.cp1.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'] )
         self.eta1_vals.append(self.eta_compressor)
 
-        #self.cp2.set_attr(eta_s=self.eta_compressor,design=['eta_s'], offdesign=['char_map_pr','char_map_eta_s'])
         self.eta2_vals.append(self.eta_compressor)
 
         #set the fan efficiency
@@ -221,7 +229,7 @@ class Heatpump_tespy():
 
 
         #vary heat exchanger efficiency
-        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger,offdesign = ['kA_char'])
+        self.ev.set_attr(ttd_l=self.ttd_heat_exchanger)
         self.c1.set_attr(T=None)
         self.cd.set_attr(ttd_u=self.ttd_heat_exchanger)
         self.c3.set_attr(T=None)
@@ -268,7 +276,7 @@ class Heatpump_tespy():
         self.c1.set_attr(td_dew = sp_comp1,x=None)
         #self.cd.set_attr(ttd_u=None, UA = self.cond_UA_design)
         self.cd.set_attr(ttd_u=None,  UA = None)
-        self.ev.set_attr(ttd_l=None)
+        self.ev.set_attr(ttd_l=None,kA = None )
         self.c3.set_attr(p=p_cond)
         self.t_cond_out = PropsSI("T", "P", self.c3.p.val*1e5, "Q", 0, self.working_fluid) - 273.15
         t_subcooling = self.t_cond_out-t_subcooler
@@ -280,6 +288,10 @@ class Heatpump_tespy():
         # Freeze the actual design areas for offdesign
         #self.ev.set_attr(kA=1.5*self.ev.kA.val)
         #self.cd.set_attr(kA=1.5*self.cd.kA.val)
+
+        kA_char1 = ldc('HeatExchanger', 'kA_char1', 'DEFAULT', CharLine)
+        kA_char2 = ldc('HeatExchanger', 'kA_char2', 'EVAPORATING FLUID', CharLine)
+        self.ev.set_attr(offdesign = ['kA_char'],kA_char1 = kA_char1, kA_char2=kA_char2)
         
         try:
 
@@ -289,6 +301,7 @@ class Heatpump_tespy():
             cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
             cp1 = self.cp1.P.val 
             cp2 = self.cp2.P.val 
+            ratio = cp1/(cp1+cp2)
             load = abs(self.cd.Q.val)
             T_evap = self.c1.T.val
             T_cond = self.c4.T.val
@@ -335,8 +348,20 @@ class Heatpump_tespy():
             T_delta = None
             m_flow = 0
         #return cop, cp1,cp2,load,T_delta,ft_x,eta1,eta2,m1,m2,pr1,pr2
-        return t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2,cop
+        return t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2,cop,ratio,cp1,cp2
+    
+    def build_charline(self,x, y, degree=2, n_points=50):
+        coeffs = np.polyfit(x, y, degree)
+        x_fit = np.linspace(min(x), max(x), n_points)
+        y_fit = np.polyval(coeffs, x_fit)
 
+        line = CharLine(
+            x=x_fit.tolist(),
+            y=y_fit.tolist(),
+            extrapolate=True
+        )
+
+        return line
    
     def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,
              t_cond:float,sp_comp1:float,p_cond:float,t_subcooler:float,cooling:bool=False):

@@ -24,11 +24,11 @@ def simulation_loop():
         "eta_compressor": 0.85,
         "eta_pump": 0.7,
         "ttd_heat_exchanger": 5.0,
-        "heating_system_feed_temp": 101.32,
-        "heating_system_return_temp": 57.01,
+        "heating_system_feed_temp": 100,
+        "heating_system_return_temp": 60,
         "cooling_system_feed_temp": 10.0,
         "cooling_system_return_temp": 15.0,        
-        "tamb_design": 5.35,
+        "tamb_design": 5.51,
         "heat_design": 22e6,        # 22 MW as nominal load
         "cooling_Q_design": 50e3,    # 50 kW
         "cooling_tamb_design": 25.0
@@ -98,7 +98,7 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(0,n_steps,10), desc="Calculation"):
+    for step in range(0,n_steps,10):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -118,7 +118,7 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2,cop = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            t_in_cp1,t_in_cp2, p_in_cp1, p_in_cp2, eta1, eta2, m1, m2, pr1, pr2,cop,ratio,cp1,cp2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
 
             results.append({
                 'datetime': current_time,
@@ -126,25 +126,55 @@ def simulation_loop():
                 'Temp in cp2' : t_in_cp2,
                 'Pressure in cp1' : p_in_cp1,
                 'Pressure in cp2' : p_in_cp2,
-                'Efficiency comp1' : eta1,
-                'Efficiency comp2' : eta2,
-                'Mass flow comp1' : m1,
-                'Mass flow comp2' : m2,
+                'Comp1 eff' : eta1,
+                'Comp2 eff' : eta2,
+                'Comp1 m' : m1,
+                'Comp2 m' : m2,
                 'pr comp1' : pr1,
                 'pr comp2' : pr2,
                 'cop' : cop,
+                'cop_given' : df['Column4'].iloc[step],
+                'ratio' : ratio,
+                'cp1' : cp1,
+                'cp2' : cp2,
                 'error': None 
             })
+            
         except Exception as e:
             print(f"\n❌ Error at step {step}, time {current_time}")
             print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
             raise e
     results_df = pd.DataFrame(results)
-    results_df.to_csv('simulation_results.csv', index=False) # this is for full 13k data run
+    results_df.to_csv('charline_simulation2_results.csv', index=False) # this is for full 13k data run
+
+    def rmse(y_measured, y_model):
+        y_measured = np.array(y_measured)
+        y_model = np.array(y_model)
+        return np.sqrt(np.mean((y_model - y_measured)**2))
+
+
+    def mape(y_measured, y_model):
+        y_measured = np.array(y_measured)
+        y_model = np.array(y_model)
+        return np.mean(np.abs((y_model - y_measured) / y_measured)) * 100
+
+    y_measured = results_df['cop_given']
+    y_model    = results_df['cop']
+
+    rmse_value = rmse(y_measured, y_model)
+    mape_value = mape(y_measured, y_model)
+
+    print(f"RMSE = {rmse_value:.3f} ")
+    print(f"MAPE = {mape_value:.2f} %")
+
+
+
+
+
     #results_df.to_csv('simulation_results.csv', index=False)
     #average_COP = results_df['COP'].mean()
     #print("Average COP:", average_COP) 
-    print("Nominal load (MW):", Q_nominal)
+    #print("Nominal load (MW):", Q_nominal)
 
     '''
     x1_df = pd.DataFrame(heatpump_model.x1)
@@ -187,7 +217,7 @@ def simulation_loop():
     #heatpump_model.generate_temp_plot2()
  
     # Adjust layout
-    plt.tight_layout()
+    #plt.tight_layout()
     #plt.show()
 
 

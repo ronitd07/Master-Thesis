@@ -52,7 +52,6 @@ class Heatpump_tespy():
         self.working_fluid = params["working_fluid"]
         self.eta_compressor1 = params["eta_compressor1"]
         self.eta_compressor2 = params["eta_compressor2"]
-        self.eta_pump = params["eta_pump"]
         self.ttd_heat_exchanger = params["ttd_heat_exchanger"]
         self.heating_system_feed_tenp = params["heating_system_feed_temp"]
         self.heating_system_return_temp = params["heating_system_return_temp"]
@@ -89,7 +88,6 @@ class Heatpump_tespy():
         self.cc = CycleCloser("cycle closer")
         self.sp = DropletSeparator("Separator")
         self.mg = Merge('Merge')
-        self.fan = Pump("Pump")
         
         self.so1 = Source("ambient river source")
         self.si1 = Sink("ambient river sink")
@@ -112,15 +110,15 @@ class Heatpump_tespy():
         self.nwk.add_conns(self.c0, self.c1, self.c2,self.c2a, self.c3, self.c4, self.c5, self.c6, self.c7, self.c8)
         #self.nwk.add_conns(self.c0, self.c1, self.c2,self.c4, self.c5)
 
-        self.c10 = Connection(self.so1, "out1", self.fan, "in1", label="10")
-        self.c11 = Connection(self.fan, "out1", self.ev, "in1", label="11")
+        #self.c10 = Connection(self.so1, "out1", self.fan, "in1", label="10")
+        self.c11 = Connection(self.so1, "out1", self.ev, "in1", label="11")
         self.c12 = Connection(self.ev, "out1", self.si1, "in1", label="12")
 
 
         self.c21 = Connection(self.so2, "out1", self.cd, "in2", label="21")
         self.c22 = Connection(self.cd, "out2", self.si2, "in1", label="22")
 
-        self.nwk.add_conns(self.c10,self.c11, self.c12, self.c21, self.c22)
+        self.nwk.add_conns(self.c11, self.c12, self.c21, self.c22)
 
 
         ####################################################################
@@ -282,20 +280,20 @@ class Heatpump_tespy():
         )                     
         #gen_char = load_custom_char('eta_s_test', CharLine)
         #Default charmaps
-        #self.cp1.set_attr(eta_s=self.eta_compressor, design = ['eta_s'], offdesign = ['char_map_eta_s','char_map_pr'])
-        #self.cp2.set_attr(eta_s=self.eta_compressor, design = ['eta_s'],  offdesign = ['char_map_eta_s','char_map_pr'])
+        #self.cp1.set_attr(eta_s=self.eta_compressor1, design = ['eta_s'], offdesign = ['char_map_eta_s','char_map_pr'],char_warnings = False)
+        #self.cp2.set_attr(eta_s=self.eta_compressor2, design = ['eta_s'],  offdesign = ['char_map_eta_s','char_map_pr'],char_warnings = False)
 
         #Custom charmaps
         self.cp1.set_attr(eta_s=self.eta_compressor1, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta1},char_map_pr = {'char_func' : map_pr1}, offdesign = ['char_map_eta_s','char_map_pr'])
         self.cp2.set_attr(eta_s=self.eta_compressor2, design = ['eta_s'],char_map_eta_s = {'char_func' : map_eta2},char_map_pr = {'char_func' : map_pr2}, offdesign = ['char_map_eta_s','char_map_pr'])
 
         #set the fan efficiency
-        self.fan.set_attr(eta_s=self.eta_pump,pr=1.002)
+        #self.fan.set_attr(eta_s=self.eta_pump,pr=1.002)
 
 
         # set the connections around the hx
         self.c1.set_attr(fluid={self.working_fluid: 1}, x=1.0)
-        self.c10.set_attr(fluid={ "Water": 1},  T=self.tamb_design,p=1)
+        self.c11.set_attr(fluid={ "Water": 1},  T=self.tamb_design,p=1)
         self.c12.set_attr(T=self.tamb_design - 3)
         self.c21.set_attr(fluid={ "Water": 1}, p=3.0, T=self.heating_system_return_temp)
         self.c22.set_attr(T=self.heating_system_feed_tenp)
@@ -354,7 +352,7 @@ class Heatpump_tespy():
             _type_: _description_
         """
         if source_temp_in != None:
-            self.c10.set_attr(T=source_temp_in)
+            self.c11.set_attr(T=source_temp_in)
             self.c12.set_attr(T=source_temp_out)
         if Q != None:
             self.cd.set_attr(Q=-Q)  
@@ -385,7 +383,7 @@ class Heatpump_tespy():
             self.nwk.assert_convergence()
             #self.nwk.print_results()
             self.nwk.save('results.csv')
-            cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val + self.fan.P.val )
+            cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val)
             cp1 = self.cp1.P.val 
             cp2 = self.cp2.P.val
             load = abs(self.cd.Q.val)
@@ -410,7 +408,7 @@ class Heatpump_tespy():
 
 
             X= np.sqrt((self.t1_design + 273.15)/(self.c1.T.val+273.15))
-            print(f'speedline X Comp1 = {X}')
+            #print(f'speedline X Comp1 = {X}')
             x= np.sqrt((self.t2a_design + 273.15)/(self.c2a.T.val+273.15))
             #print(f'speedline X Comp2 = {x}')
 
@@ -439,7 +437,7 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return eta1,eta2,m1,m2,X,cop,cp1,cp2,igva1,igva2
+        return eta1,eta2,m1,m2,X,x,cop,cp1,cp2,igva1,igva2
 
 
     def plot(self):
@@ -910,7 +908,7 @@ class Heatpump_tespy():
         t_ref_she = np.linspace(t_ref_out,t_ref_in ,5)
         t_ref = np.concatenate([t_ref_she,t_ref_ev])
 
-        t_w_in  = self.c10.T.val
+        t_w_in  = self.c11.T.val
         t_w_out = self.c12.T.val
 
         t_w = np.linspace(t_w_in, t_w_out, 20)
@@ -971,7 +969,6 @@ if __name__ == "__main__":
         "working_fluid": "R1234ZE",
         "cooling_mode #not implemented": False,
         "eta_compressor": 0.92,
-        "eta_pump": 0.7,
         "ttd_heat_exchanger": 5.0,
         "heating_system_feed_temp": 101.32,
         "heating_system_return_temp": 74.38,

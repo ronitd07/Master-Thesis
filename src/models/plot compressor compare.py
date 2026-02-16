@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import fhgcd_plots.main as fhgCD
 import matplotlib.dates as mdates
+import numpy as np
 
 #df = pd.read_csv('combined_simulation_results.csv',sep=',')
 df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-df2 = pd.read_csv('simulation_results.csv',sep=',')
+df2 = pd.read_csv('full_simulation_results.csv',sep=',')
 
 #fhgCD.set_matplotlib_style("scientific", "official")
 
@@ -36,6 +37,14 @@ ax.grid(True)
 #Plot ratio of comp1 and comp2 power
 fig1,ax =  plt.subplots(figsize=(10, 4))
 ax.plot(df2['datetime'], df2['Compressor1 Power [kW]'] / df2['Compressor2 Power [kW]'], label='Comp1 Power / Comp2 Power')
+
+# Calculate mean
+ratio = df2['Compressor1 Power [kW]'] / df2['Compressor2 Power [kW]']
+median = np.median(ratio)
+
+#mean = 0.85
+ax.axhline(median, linestyle='--', linewidth=2,
+           label=f'Median = {median:.2f}')
 
 ax.set_xlabel("Date time")
 ax.set_ylabel("Comp1 Power / Comp2 Power ratio")

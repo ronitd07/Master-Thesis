@@ -11,22 +11,27 @@ from sklearn.pipeline import make_pipeline
 #import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results.csv',sep=',')
+df0 = pd.read_csv('charmap_simulation_results1.csv',sep=',')
 df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
+df1_10 = df1['Column6'][::10]
 
 #df['X'].to_excel('X_values.xlsx', index=False, header=['Column1']) 
 
-m1_design = 118.80677445124788
+m1_design = 115.90244784006417
 pr1_design = 5.096810782032433
 p1_design = 1.9620112316612908 # in bar
-e1_design = 0.85
+e1_design = 0.8
 
 
 #fhgCD.set_matplotlib_style("scientific", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
 x = df['X'].round(3)
-y = df['Comp1 m'] * p1_design /(m1_design * df1['Column6'] * x)
-z = df['Comp1 eff']/e1_design # pr1 given from data
+y = (
+    df['Comp1 m'].to_numpy() * p1_design /
+    (m1_design * df1['Column6'].to_numpy() * x.to_numpy())
+) 
+z = df['Comp1 eff']/e1_design
 sc = ax.scatter(y, z,
          label='Efficiency compressor 1', c=x, cmap='viridis')
 
@@ -45,8 +50,8 @@ new_df = pd.DataFrame({
     'z': z
 })
 fig1, ax = plt.subplots(figsize=(10, 4))
-x_values_to_plot = x.unique()
-#x_values_to_plot = [0.971, 0.98]
+#x_values_to_plot = x.dropna().unique()
+x_values_to_plot = [0.96, 0.97, 0.98, 0.99]
 
 for x_value in x_values_to_plot:
     filtered_df = new_df[new_df['x'] == x_value]

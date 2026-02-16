@@ -245,7 +245,7 @@ class Heatpump_tespy():
         #self.cp2.set_attr(igva='var')
         #self.c1.set_attr(T=self.t1_design )
         #self.c2a.set_attr(T=self.t2a_design )
-        print(self.cp1.igva.val)
+        #print(self.cp1.igva.val)
         # After design solves in partload_heat_pump()
 
         # Freeze the actual design areas for offdesign
@@ -305,7 +305,7 @@ class Heatpump_tespy():
             load=None
             T_delta = None
             m_flow = 0
-        return eta1,eta2,m1,m2,pr1,pr2,X,x
+        return eta1,eta2,m1,m2,pr1,pr2,X,x,cop
 
 
     def plot(self):

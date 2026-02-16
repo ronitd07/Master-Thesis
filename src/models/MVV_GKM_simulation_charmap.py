@@ -22,11 +22,10 @@ def simulation_loop():
         "working_fluid": "R1234ZE",
         "eta_compressor1": 0.8,
         "eta_compressor2": 0.75,
-        "eta_pump": 0.7,
         "ttd_heat_exchanger": 5.0,
         "heating_system_feed_temp": 101.32,
         "heating_system_return_temp": 57.01,      
-        "tamb_design": 5.35,
+        "tamb_design": 5.51,
         "heat_design": 22e6,        # 22 MW as nominal load
     }
     #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
@@ -75,7 +74,7 @@ def simulation_loop():
 
 
 
-    for step in tqdm(range(0,n_steps,10), desc="Calculation"):
+    for step in tqdm(range(0,1,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -94,7 +93,7 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            eta1,eta2,m1,m2,X,cop,cp1,cp2,igva1,igva2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
+            eta1,eta2,m1,m2,X,x,cop,cp1,cp2,igva1,igva2 = heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
 
             results.append({
                 'datetime': current_time,
@@ -107,6 +106,7 @@ def simulation_loop():
                 'cp1': cp1,
                 'cp2': cp2,
                 'Speed line X' : X,
+                'Speed line x' : x,
                 'igva1' : igva1,
                 'igva2' : igva2,
                 'status': 'passed'
@@ -132,7 +132,7 @@ def simulation_loop():
 
             continue
     results_df = pd.DataFrame(results)
-    results_df.to_csv('charmap_simulation_results1.csv', index=False) # this is for full 13k data run
+    #results_df.to_csv('charmap_simulation_results1.csv', index=False) # this is for full 13k data run
     #results_df.to_csv('simulation_results.csv', index=False)
     #average_COP = results_df['COP'].mean()
     #print("Average COP:", average_COP) 

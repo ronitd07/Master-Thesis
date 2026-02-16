@@ -15,7 +15,7 @@ df = pd.read_csv('charmap_simulation_results1.csv',sep=',')
 
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.scatter(df['m1'], df['igva1'],marker = 'x' ,label = 'igva Compressor 1' )
-ax.scatter(df['m2'], df['igva2'],marker = 'x', label = 'igva Compressor 2' )
+ax.scatter(df['m2'], df['igva2'],marker = 'o', label = 'igva Compressor 2' )
 
 
 ax.set_xlabel('Mass flow (kg/s)')

@@ -9,7 +9,7 @@ import fhgcd_plots.main as fhgCD
 import numpy as np
 
 df = pd.read_excel('cop comparison.xlsx', sheet_name="Sheet1", header=0) #Load profile data
-df2 = pd.read_csv('charmap_simulation_results1.csv',sep=',')
+df2 = pd.read_csv('charline2_simulation_results.csv',sep=',')
 
 
 
