@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
+from sklearn.linear_model import HuberRegressor
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 #import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results1.csv',sep=',')
@@ -12,8 +16,8 @@ df0 = pd.read_csv('charmap_simulation_results1.csv',sep=',')
 df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
 df1_10 = df1['Column6'][::10]
 
-m2_design = 179.98400166198306
-pr2_design = 2.9297156931990656
+m2_design = 177.78266463515115
+pr2_design = 2.8615636254804433
 p2_design = 10 # in bar
 e2_design = 0.75
 
@@ -21,15 +25,9 @@ e2_design = 0.75
 #fhgCD.set_matplotlib_style("scientific", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
-x = df0['Speed line x'].round(2)
-y = (
-    df0['m2'].to_numpy() * p2_design /
-    (m2_design * df1_10.to_numpy() * x.to_numpy())
-) * (1-df0['igva2']/100)
-z = (
-    df0['m2'].to_numpy() * p2_design /
-    (m2_design * df1_10.to_numpy() * x.to_numpy())
-) * (1-df0['igva2'] ** 2 /10000)# pr2 given from data
+x = df['Speed line x'].round(4)
+y = (df['Comp2 m'].to_numpy() * p2_design) /(m2_design * df1['Column19'] * x * (1-df['igva2']/100))
+z = df['Comp2 eff']/(e2_design * (1 - df['igva2']**2 / 10000))
 sc = ax.scatter(y, z,
          label='Efficiency compressor 2', c=x, cmap='viridis')
 
@@ -48,36 +46,86 @@ new_df = pd.DataFrame({
     'z': z
 })
 fig1, ax = plt.subplots(figsize=(10, 4))
-print(x.unique())
-x_values_to_plot = [ 0.97, 0.98, 0.99, 1,1.01]
-#x_values_to_plot = [  0.998]
-#x_values_to_plot = x.dropna().unique()
+x_values_to_plot = [
+   0.9902,
+   0.9921,
+   0.9923,
+   1.0023,
+   1.0033,
+   1.0038,
+   1.004,
+   1.0043,
+   1.0046,
+   1.0047
+  ]
+#x_values_to_plot = np.sort(x.dropna().unique())
+#print(x_values_to_plot)
+
+x_all = []
+y_all = []
+z_all = []
+results = []
+
 for x_value in x_values_to_plot:
     filtered_df = new_df[new_df['x'] == x_value]
 
-    x_data = filtered_df['y'].to_numpy()
-    y_data = filtered_df['z'].to_numpy()
+    y_data = filtered_df['y'].to_numpy()
+    z_data = filtered_df['z'].to_numpy()
+    print(f'{x_value} : count {len(y_data)}')
+    print(f'{x_value}, y_min {np.min(y_data)}, y_max {np.max(y_data)}')
+    y_count = len(y_data)
+    
+    # Reshape for sklearn
+    Y = y_data.reshape(-1, 1)
 
-    # Fit a 2nd-degree polynomial
-    coeffs = np.polyfit(x_data, y_data, deg=2)
-    poly = np.poly1d(coeffs)
+    # Huber regression with quadratic features
+    model = make_pipeline(
+        PolynomialFeatures(degree=2, include_bias=True),
+        HuberRegressor(epsilon=1.35, alpha=0.0)
+    )
 
-    # Generate smooth points for the curve
-    x_smooth = np.linspace(x_data.min(), x_data.max(), 10)
-    y_smooth = poly(x_smooth)
-    print(x_value,x_smooth, y_smooth )
+    model.fit(Y, z_data)
+
+    # Smooth curve
+    y_smooth = np.linspace(y_data.min(), y_data.max(), 10)
+    Y_smooth = y_smooth.reshape(-1, 1)
+    z_smooth = model.predict(Y_smooth)
+
+
+    z_pred = model.predict(Y)
+
+    r2 = r2_score(z_data, z_pred)
+    rmse = np.sqrt(mean_squared_error(z_data, z_pred))
+    mae = mean_absolute_error(z_data, z_pred)
+
+    results.append([x_value, r2, rmse, mae,y_count])
+
+    # Store values
+    y_all.append(y_smooth.tolist())
+    z_all.append(z_smooth.tolist())
 
     
     # Plot scatter points
-    ax.scatter(x_data, y_data, label=f'X = {x_value}')
+    ax.scatter(y_data, z_data, label=f'X = {x_value}')
 
     # Plot fitted curve
-    ax.plot(x_smooth, y_smooth, label=f'Fit X = {x_value}')
-    plt.title('Efficiency curve fitting for Compressor stage 2')
-    plt.xlabel('Y')
-    plt.ylabel('Z')
-    plt.legend()
-    plt.grid(True)
+    ax.plot(y_smooth, z_smooth, label=f'Fit X = {x_value}')
+
+
+print(f' "x" : {x_values_to_plot},\n "y" : {y_all},\n "z" :  {z_all}')
+plt.title('Efficiency curve fitting for Compressor stage 2')
+plt.xlabel('Y')
+plt.ylabel('Z')
+plt.legend(loc='lower right', bbox_to_anchor=(0.98, 0.02), fontsize=7)
+plt.grid(True)
+plt.savefig("fit_eta2.png", dpi=300, bbox_inches="tight")
+
+results_df = pd.DataFrame(results, columns=['X','R2','RMSE','MAE','COUNT'])
+good_lines = results_df.sort_values(by=['COUNT','R2', 'RMSE'], ascending=[False, False,True])
+
+#filtered = results_df[results_df['COUNT'] > 30]   # choose threshold
+#good_lines = filtered.sort_values(by='RMSE')
+good_lines.to_csv('eta2_fit.csv', index=False)
 
 plt.show()
 '''

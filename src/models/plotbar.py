@@ -3,14 +3,15 @@ Plot frequency of residual of COP
 '''
 import matplotlib.pyplot as plt
 import pandas as pd
-import fhgcd_plots.main as fhgCD
+#import fhgcd_plots.main as fhgCD
 import matplotlib.dates as mdates
 
 
 
-#df = pd.read_csv('combined_simulation_results.csv',sep=',')
+#df = pd.read_csv('charmap_simulation_results6_count.csv',sep=',')
 df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-df2 = pd.read_csv('charline_simulation_results.csv',sep=',')
+#df2 = pd.read_csv('charmap_simulation_results6full.csv',sep=',')
+df2 = pd.read_csv('compressor_results1.csv',sep=',')
 
 #fhgCD.set_matplotlib_style("scientific", "official")
 
@@ -29,7 +30,7 @@ ax.set_title('Frequency distribution of residuals of COP')
 ax.grid(True)
 ax.legend()
 ax.set_xlim(-0.5,0.5)
-
+plt.savefig("COP residual barplot.png", dpi=300, bbox_inches="tight")
 plt.tight_layout()
 plt.show()
 

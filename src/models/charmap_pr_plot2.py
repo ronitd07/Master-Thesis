@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 #import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results1.csv',sep=',')
@@ -13,35 +14,19 @@ df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="
 df1_10 = df1['Column6'][::10]
 
 
-m2_design = 191.97196661588126
-pr2_design = 3.0593984241028647
+m2_design = 177.78266463515115
+pr2_design = 2.8615636254804433
 p2_design = 10 # in bar
-e2_design = 0.85
+e2_design = 0.75
 
 
 #fhgCD.set_matplotlib_style("scientific", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
-x = df0['Speed line x'].round(2)
-y = (
-    df0['m2'].to_numpy() * p2_design /
-    (m2_design * df1_10.to_numpy() * x.to_numpy())
-) * (1-df0['igva2']/100)
-z = (
-    df0['m2'].to_numpy() * p2_design /
-    (m2_design * df1_10.to_numpy() * x.to_numpy())
-) * (1-df0['igva2']  /100)# pr2 given from data
-sc = ax.scatter(y, z,
-         label='Pressure ratio compressor 2', c=x, cmap='viridis')
+x = df['Speed line x'].round(4)
+y = (df['Comp2 m'].to_numpy() * p2_design) /(m2_design * df1['Column19'] * x * (1-df['igva2']/100))
+z = df['pr2']/(pr2_design * (1 - df['igva2'] / 100))
 
-cbar = fig.colorbar(sc,ax=ax)
-cbar.set_label('X')  # <- colormap title
-
-
-ax.set_xlabel('Y')
-ax.set_ylabel('Z')
-ax.legend()
-ax.grid(True)
 
 new_df = pd.DataFrame({
     'x': x,
@@ -49,36 +34,60 @@ new_df = pd.DataFrame({
     'z': z
 })
 fig1, ax = plt.subplots(figsize=(10, 4))
-x_values_to_plot = [ 0.97, 0.98, 0.99, 1,1.01]
+
+x_values_to_plot = x.dropna().unique()
+#x_values_to_plot = []
+
+x_all = []
+y_all = []
+z_all = []
+results = []
+
 for x_value in x_values_to_plot:
     filtered_df = new_df[new_df['x'] == x_value]
 
-    x_data = filtered_df['y'].to_numpy()
-    y_data = filtered_df['z'].to_numpy()
+    y_data = filtered_df['y'].to_numpy()
+    z_data = filtered_df['z'].to_numpy()
+
+    y_count = len(y_data)
 
     # Fit a 2nd-degree polynomial
-    coeffs = np.polyfit(x_data, y_data, deg=2)
+    coeffs = np.polyfit(y_data, z_data, deg=2)
     poly = np.poly1d(coeffs)
 
     # Generate smooth points for the curve
-    x_smooth = np.linspace(x_data.min(), x_data.max(), 10)
-    y_smooth = poly(x_smooth)
+    y_smooth = np.linspace(y_data.min(), y_data.max(), 10)
+    z_smooth = poly(y_smooth)
 
-    print(x_value,x_smooth, y_smooth )
+    z_pred=poly(y_data)
 
+    r2 = r2_score(z_data, z_pred)
+    rmse = np.sqrt(mean_squared_error(z_data, z_pred))
+    mae = mean_absolute_error(z_data, z_pred)
 
+    results.append([x_value, r2, rmse, mae,y_count])
+
+    # Store values
+    y_all.append(y_smooth.tolist())
+    z_all.append(z_smooth.tolist())
     
     # Plot scatter points
-    ax.scatter(x_data, y_data, label=f'X = {x_value}')
+    ax.scatter(y_data, z_data, label=f'X = {x_value}')
 
     # Plot fitted curve
-    ax.plot(x_smooth, y_smooth, label=f'Fit X = {x_value}')
+    ax.plot(y_smooth, z_smooth, label=f'Fit X = {x_value}')
     plt.title('Pressure ratio curve fitting for Compressor stage 2')
     plt.xlabel('Y')
     plt.ylabel('Z')
-    plt.legend()
+    plt.legend(loc='lower right', bbox_to_anchor=(0.98, 0.02), fontsize=7)
     plt.grid(True)
+    
+print(f' "x" : {x_values_to_plot},\n "y" : {y_all},\n "z" :  {z_all}')
 
+results_df = pd.DataFrame(results, columns=['X','R2','RMSE','MAPE','COUNT'])
+results_df.to_csv('pr2_fit.csv', index=False)
+
+plt.savefig("fit_pr2.png", dpi=300, bbox_inches="tight")
 plt.show()
 '''
 

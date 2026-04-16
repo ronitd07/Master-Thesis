@@ -16,14 +16,14 @@ def simulation_loop():
     # Define example parameters for heat pump
 
     params_hp = {
-        "name": "MyHeatPump",
+        "name": "Compressor",
         "working_fluid": "R1234ZE",
         "cooling_mode #not implemented": False,
-        "eta_compressor": 0.85,
-        "eta_pump": 0.7,
+        "eta_compressor1": 0.8,
+        "eta_compressor2": 0.75,
         "ttd_heat_exchanger": 5.0,
-        "heating_system_feed_temp": 101.32,
-        "heating_system_return_temp": 57.01,
+        "heating_system_feed_temp": 100,
+        "heating_system_return_temp": 60,
         "cooling_system_feed_temp": 10.0,
         "cooling_system_return_temp": 15.0,        
         "tamb_design": 5.35,
@@ -96,7 +96,7 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(0,n_steps,1), desc="Calculation"):
+    for step in tqdm(range(1050,1051,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -104,7 +104,7 @@ def simulation_loop():
         source_temp_out = source_out_temp.iloc[step]
         Q_load = thermal_loads.iloc[step]
         p_inter = inter_p.iloc[step]
-        t_evap = evap_temp.iloc[step]
+        p_evap = df['Column6'].iloc[step] 
         t_cond = cond_temp.iloc[step]
         sp_comp1 = comp1_sp.iloc[step]
         p_cond = cond_p.iloc[step]
@@ -114,7 +114,7 @@ def simulation_loop():
 
         try:
             # Step heat pump simulation
-            eta1,eta2,m1,m2,pr1,pr2,X,x,cop= heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,t_evap,t_cond,sp_comp1,p_cond,t_subcooler,cp1_real,cp2_real)
+            eta1,eta2,m1,m2,pr1,pr2,X,x,cop,igva1,igva2,kA= heatpump_model.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out,Q_load,p_inter,p_evap,t_cond,sp_comp1,p_cond,t_subcooler,cp1_real,cp2_real)
 
             results.append({
                 'datetime': current_time,
@@ -126,6 +126,9 @@ def simulation_loop():
                 'pr2' : pr2,
                 'X' : X,
                 'x' : x,
+                'igva1' : igva1,
+                'igva2' : igva2,
+                'kA' : kA,
                 'cop' : cop,
                 'cop_given' : df['Column4'].iloc[step],
                 'error': None 
@@ -135,11 +138,10 @@ def simulation_loop():
             print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
             raise e
     results_df = pd.DataFrame(results)
-    results_df.to_csv('compressor_results.csv', index=False)
-    #results_df.to_csv('simulation_results.csv', index=False)
+    results_df.to_csv('compressor_results_test1.csv', index=False)
 
 
-    print("Nominal load (MW):", Q_nominal)
+    #print("Nominal load (MW):", Q_nominal)
 
     '''
     x1_df = pd.DataFrame(heatpump_model.x1)
