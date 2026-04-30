@@ -43,6 +43,7 @@ ax.axhline(0, linewidth=0.8)
 ax.grid(True, axis='y')
 
 plt.tight_layout()
+plt.savefig("Sensitivity linear regression compressor 1", dpi=300, bbox_inches="tight")
 plt.show()
 
 # Stage 2
@@ -81,4 +82,5 @@ ax.axhline(0, linewidth=0.8)
 ax.grid(True, axis='y')
 
 plt.tight_layout()
+plt.savefig("Sensitivity linear regression compressor 2", dpi=300, bbox_inches="tight")
 plt.show()

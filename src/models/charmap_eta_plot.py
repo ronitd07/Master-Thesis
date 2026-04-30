@@ -43,8 +43,7 @@ new_df = pd.DataFrame({
 fig1, ax = plt.subplots(figsize=(10, 4))
 x_values_to_plot = np.sort(x.unique())
 #x_values_to_plot = [val for val in x_values_to_plot if 0.98 < val < 0.9999]
-x_values_to_plot = [0.95,
-   0.9595
+x_values_to_plot = [0.9913,0.9914
   ]
 
 x_all = []

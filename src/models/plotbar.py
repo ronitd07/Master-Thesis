@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 #import fhgcd_plots.main as fhgCD
 import matplotlib.dates as mdates
+import numpy as np
 
 
 
@@ -19,6 +20,7 @@ df1_10 = df1.iloc[::10]
 df2_10 = df2.iloc[::10]
 # Absolute error
 error_abs = df2['cop'].values - df2['cop_given'].values
+
 
 fig, ax = plt.subplots(figsize=(8, 4))
 

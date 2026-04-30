@@ -76,8 +76,8 @@ def simulation_loop():
     count = 0
 
     #or step in tqdm(range(7619,7620,1), desc="Calculation"):
-    #for step in tqdm(range(8024,8030,1), desc="Calculation"):
-    for step in tqdm(range(0,n_steps,1), desc="Calculation"):
+    for step in tqdm(range(0,1,1), desc="Calculation"):
+    #for step in tqdm(range(0,n_steps,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -150,7 +150,7 @@ def simulation_loop():
             continue
         
     results_df = pd.DataFrame(results)
-    results_df.to_csv('charmap_simulation_results_etapr.csv', index=False) 
+    results_df.to_csv('charmap_simulation_results_test1.csv', index=False) 
 
     n_failed = (results_df['status'] == 'failed').sum()
     print(f'Failed count : {n_failed} out of {count}')

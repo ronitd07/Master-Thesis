@@ -77,7 +77,7 @@ class Heatpump_tespy():
         #create network and connections
         #self.nwk = Network(fluids=[self.working_fluid, "air", "Water","INCOMP::MEG[0.2]|mass"], p_unit="bar", T_unit="C", h_unit="kJ / kg", v="m3 / h", iterinfo=False)
         self.nwk = Network(fluids=[self.working_fluid, "Water"], iterinfo=False)
-        self.nwk.units.set_defaults(pressure="bar", temperature = "°C", enthalpy = "kJ/kg", volumetric_flow = "m3/h",entropy = 'J / kgK' )
+        self.nwk.units.set_defaults(pressure="bar",pressure_difference ="bar", temperature = "°C", enthalpy = "kJ/kg", volumetric_flow = "m3/h",entropy = 'J / kgK' )
         self.cp1 = TurboCompressor("compressor1")
         self.cp2 = TurboCompressor("compressor2")
         self.ev = HeatExchanger("evaporator")
@@ -275,18 +275,22 @@ class Heatpump_tespy():
         #self.cp1.set_attr(igva=0)
         #self.cp2.set_attr(igva=0)
 
+        #igva values from real compressor power simulation run
         #self.cp1.set_attr(igva=igva1)
         #self.cp2.set_attr(igva=igva2)
 
         self.cp1.set_attr(igva='var')
         self.cp2.set_attr(igva='var')
 
+        #eta values from real compressor power simulation run
         #self.cp1.set_attr(eta_s=eta1)
         #self.cp2.set_attr(eta_s=eta2)
 
+        #scaling factor
         #self.cp1.set_attr(eta_scale = k1)
         #self.cp2.set_attr(eta_scale = k2)
 
+        #compressor power from real compressor power simulation run
         #self.cp1.set_attr(P=cp1_real*1e3)
         #self.cp2.set_attr(P=cp2_real*1e3)
 
@@ -297,8 +301,9 @@ class Heatpump_tespy():
         x = [0.2521175208169838, 0.33220667111492613, 0.41229582141286847, 0.4923849717108108, 0.5724741220087531, 0.6525632723066954, 0.7326524226046378, 0.8127415729025801, 0.8928307232005225, 0.9729198734984649],
         y = [0.43643606753034203, 0.5039238958656511, 0.57141172420096, 0.6388995525362691, 0.706387380871578, 0.773875209206887, 0.8413630375421961, 0.908850865877505, 0.976338694212814, 1.0438265225481231]
         )
-        self.ev.set_attr(offdesign = ['kA_char'],kA_char1 = kA_char1, kA_char2=kA_char2) # Using default for hot fluid, evaporating fluid for cold fluid
-        #self.ev.set_attr(kA_char2 = {'char_func': line_ev},offdesign = ['kA_char']) # Using default for hot fluid, custom char line for cold fluid
+        #self.ev.set_attr(offdesign = ['kA_char'],kA_char1 = kA_char1, kA_char2=kA_char2) # Using default for hot fluid, evaporating fluid for cold fluid
+        self.ev.set_attr(kA_char2 = {'char_func': line_ev},offdesign = ['kA_char']) # Using default for hot fluid, custom char line for cold fluid
+
         
         try:
 
@@ -762,7 +767,7 @@ class Heatpump_tespy():
         if savefig:
             if filepath is None:
                 filename = (
-                    f'{diagram_type}_{refrig}.pdf'
+                    f'{diagram_type}_{refrig}.png'
                     )
                 filepath = os.path.abspath(os.path.join(
                     os.getcwd(), filename

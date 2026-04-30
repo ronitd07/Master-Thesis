@@ -6,7 +6,7 @@ from sklearn.metrics import r2_score
 # -----------------------------
 # Load data
 # -----------------------------
-df = pd.read_csv('charmap_simulation_results_prmap.csv', sep=',')
+df = pd.read_csv('charmap_simulation_results1.csv', sep=',')
 
 # -----------------------------
 # Keep only rows where both values exist
