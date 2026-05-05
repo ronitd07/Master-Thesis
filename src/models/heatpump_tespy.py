@@ -10,7 +10,6 @@ import pandas as pd
 import plotly.express as px 
 #import fhgcd_plots.main as fhgCD
 import CoolProp.CoolProp as CP
-import mosaik_api_v3
 import multiprocessing as mp
 from scipy import interpolate
 import json
