@@ -1,6 +1,6 @@
 
 """
-heat pump model of MVV GKM Manheim with subcooling
+heat pump model of MVV GKM Manheim with subcooling and charline
 
 """
 from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,TurboCompressor

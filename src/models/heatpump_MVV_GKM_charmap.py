@@ -1,6 +1,6 @@
 
 """
-heat pump model of MVV GKM Manheim using real compressor Power
+heat pump model of MVV GKM Manheim using compressor maps
 
 """
 from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,PolynomialCompressor, TurboCompressor
