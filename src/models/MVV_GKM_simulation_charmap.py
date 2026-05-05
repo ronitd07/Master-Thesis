@@ -150,15 +150,10 @@ def simulation_loop():
             continue
         
     results_df = pd.DataFrame(results)
-    results_df.to_csv('charmap_simulation_results_test1.csv', index=False) 
+    results_df.to_csv('charmap_simulation_results_test1.csv', index=False) #Results csv file
 
     n_failed = (results_df['status'] == 'failed').sum()
     print(f'Failed count : {n_failed} out of {count}')
-
-    #results_df.to_csv('simulation_results.csv', index=False)
-    #average_COP = results_df['COP'].mean()
-    #print("Average COP:", average_COP) 
-    #print("Nominal load (MW):", Q_nominal)
 
     '''
     x1_df = pd.DataFrame(heatpump_model.x1)
