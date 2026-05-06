@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import fhgcd_plots.main as fhgCD
 from sklearn.metrics import r2_score
 
 # -----------------------------
 # Load data
 # -----------------------------
-df = pd.read_csv('charmap_simulation_results1.csv', sep=',')
+df = pd.read_csv('charline_simulation_results.csv', sep=',')
 
 # -----------------------------
 # Keep only rows where both values exist
@@ -56,7 +57,7 @@ print(f"Standard deviation of absolute error = {std_error:.3f}")
 print(f"RMSE = {rmse_value:.3f}")
 print(f"MAPE = {mape_value:.2f} %")
 
-
+fhgCD.set_matplotlib_style("darkgrid", "official")
 
 # -----------------------------
 # Plot simulated COP vs real COP
