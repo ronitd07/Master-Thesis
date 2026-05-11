@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
+import fhgcd_plots.main as fhgCD
 
 
 
@@ -38,6 +39,8 @@ z= [[0.502, 0.493, 0.485, 0.467, 0.442,
                        [1.441, 1.37, 1.3, 1.229, 1.158,
                         1.088, 1.017, 0.946, 0.876, 0.805]]
 
+fhgCD.set_matplotlib_style("grid", "official")
+#fhgCD.set_matplotlib_style('grid')
 
 for i in range(len(x)):
 	plt.plot(y[i],z[i],'x',linestyle='-',label=f'Speedline X = {x[i]}')
@@ -48,5 +51,5 @@ plt.ylabel('y')
 plt.grid(True)
 plt.tight_layout()
 plt.legend(fontsize=8)
-plt.savefig("prmap_default.png", dpi=300, bbox_inches="tight")
+plt.savefig("prmap_default_fhgcd.png", dpi=300, bbox_inches="tight")
 plt.show()

@@ -3,6 +3,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import numpy as np
+import fhgcd_plots.main as fhgCD
 
 # Load your data
 df = pd.read_csv('sensitivity_simulation_results.csv',sep=',')
@@ -28,6 +29,7 @@ param_names = ['Temp in cp1',
                'Mass flow comp1',
                'pr comp1']
 
+fhgCD.set_matplotlib_style("grid", "official")
 fig, ax = plt.subplots(figsize=(8, 4))
 
 x = np.arange(len(param_names))
@@ -43,7 +45,7 @@ ax.axhline(0, linewidth=0.8)
 ax.grid(True, axis='y')
 
 plt.tight_layout()
-plt.savefig("Sensitivity linear regression compressor 1", dpi=300, bbox_inches="tight")
+plt.savefig("Sensitivity linear regression compressor 1_fhgcd", dpi=300, bbox_inches="tight")
 plt.show()
 
 # Stage 2
@@ -82,5 +84,5 @@ ax.axhline(0, linewidth=0.8)
 ax.grid(True, axis='y')
 
 plt.tight_layout()
-plt.savefig("Sensitivity linear regression compressor 2", dpi=300, bbox_inches="tight")
+plt.savefig("Sensitivity linear regression compressor 2_fhgcd", dpi=300, bbox_inches="tight")
 plt.show()

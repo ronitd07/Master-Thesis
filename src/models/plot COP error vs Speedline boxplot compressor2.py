@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import fhgcd_plots.main as fhgCD
 
 # Load data
-df2 = pd.read_csv('charmap_simulation_results_reverse.csv', sep=',')
+df2 = pd.read_csv('charmap_simulation_results_count6.csv', sep=',')
 
 # --- Clean and align data properly ---
 df = df2[['Speed line x', 'cop', 'cop_given']].dropna().copy()
@@ -21,7 +22,8 @@ grouped = df.groupby('Speed line x rounded')['error_abs']
 data = [group for _, group in grouped]
 labels = [str(name) for name, _ in grouped]
 
-# --- Plot ---clea
+# --- Plot ---
+fhgCD.set_matplotlib_style("grid", "official")
 fig, ax = plt.subplots(figsize=(10, 5))
 
 ax.boxplot(data, tick_labels=labels)
@@ -34,7 +36,7 @@ ax.grid(True)
 plt.xticks(rotation=45)
 plt.tight_layout()
 
-plt.savefig("COP_boxplot_speedline_compressor2.png", dpi=300, bbox_inches="tight")
+plt.savefig("boxplot_comp2_fhgcd.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 # -------------------------
@@ -53,5 +55,5 @@ ax.grid(True, axis='y')
 
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("COP_count_per_speedline_compressor2.png", dpi=300, bbox_inches="tight")
+plt.savefig("count_comp2_fhgcd.png", dpi=300, bbox_inches="tight")
 plt.show()

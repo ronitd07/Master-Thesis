@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
-#import fhgcd_plots.main as fhgCD
+import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results_test.csv',sep=',')
 
@@ -17,7 +17,7 @@ m_design = 116.84458779580694
 
 
 
-#fhgCD.set_matplotlib_style("scientific", "official")
+fhgCD.set_matplotlib_style("darkgrid", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
 x = df['Comp1 m']/m_design
@@ -40,7 +40,7 @@ ax.set_ylabel('y')
 ax.legend()
 ax.grid(True)
 
-plt.savefig("kA_evap_charline.png", dpi=300, bbox_inches="tight")
+plt.savefig("fit kA evap_fhgcd", dpi=300, bbox_inches="tight")
 
 print(f'x = {x_fit.tolist()}')
 print(f'y = {y_fit.tolist()}')

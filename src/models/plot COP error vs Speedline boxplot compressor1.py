@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import fhgcd_plots.main as fhgCD
 
 # Load data
-df2 = pd.read_csv('charmap_simulation_results1.csv', sep=',')
+df2 = pd.read_csv('charmap_simulation_results_count6.csv', sep=',')
 
 # --- Clean and align data properly ---
 df = df2[['Speed line X', 'cop', 'cop_given']].dropna().copy()
@@ -22,6 +23,7 @@ data = [group for _, group in grouped]
 labels = [str(name) for name, _ in grouped]
 
 # --- Plot ---
+fhgCD.set_matplotlib_style("grid", "official")
 fig, ax = plt.subplots(figsize=(10, 5))
 
 ax.boxplot(data, tick_labels=labels)

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
-#import fhgcd_plots.main as fhgCD
+import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results1.csv',sep=',')
 
@@ -17,7 +17,7 @@ pr2_design = 2.8615636254804384
 e2_design = 0.75
 
 
-#fhgCD.set_matplotlib_style("scientific", "official")
+fhgCD.set_matplotlib_style("darkgrid", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
 x = df['Comp1 m']/m1_design

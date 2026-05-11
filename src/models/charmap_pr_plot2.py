@@ -6,7 +6,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
-#import fhgcd_plots.main as fhgCD
+import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results1.csv',sep=',')
 df0 = pd.read_csv('charmap_simulation_results1.csv',sep=',')
@@ -20,7 +20,7 @@ p2_design = 10 # in bar
 e2_design = 0.75
 
 
-#fhgCD.set_matplotlib_style("scientific", "official")
+fhgCD.set_matplotlib_style("darkgrid", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
 x = df['Speed line x'].round(4)
@@ -35,8 +35,19 @@ new_df = pd.DataFrame({
 })
 fig1, ax = plt.subplots(figsize=(10, 4))
 
-x_values_to_plot = x.dropna().unique()
-#x_values_to_plot = []
+#x_values_to_plot = x.dropna().unique()
+x_values_to_plot = [
+   0.9902,
+   0.9921,
+   0.9923,
+   1.0023,
+   1.0033,
+   1.0038,
+   1.004,
+   1.0043,
+   1.0046,
+   1.0047
+  ]
 
 x_all = []
 y_all = []
@@ -75,7 +86,7 @@ for x_value in x_values_to_plot:
     ax.scatter(y_data, z_data, label=f'X = {x_value}')
 
     # Plot fitted curve
-    ax.plot(y_smooth, z_smooth, label=f'Fit X = {x_value}')
+    ax.plot(y_smooth, z_smooth, linestyle="-")
     plt.title('Pressure ratio curve fitting for Compressor stage 2')
     plt.xlabel('Y')
     plt.ylabel('Z')

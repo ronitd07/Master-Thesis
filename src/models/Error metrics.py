@@ -57,7 +57,7 @@ print(f"Standard deviation of absolute error = {std_error:.3f}")
 print(f"RMSE = {rmse_value:.3f}")
 print(f"MAPE = {mape_value:.2f} %")
 
-fhgCD.set_matplotlib_style("darkgrid", "official")
+fhgCD.set_matplotlib_style("grid", "official")
 
 # -----------------------------
 # Plot simulated COP vs real COP
@@ -71,23 +71,23 @@ x_line = np.linspace(min(y_measured.min(), y_model.min()),
 ax.plot(
     y_measured,
     y_model,
-    'o',
-    label=(
-        f'$R^2$ = {R2:.3f}\n'
-        f'RMSE = {rmse_value:.3f}\n'
-        f'MAPE = {mape_value:.2f} %\n'
-        f'$\\sigma$ = {std_error:.3f}\n'
-        f'NMBE= {nmbe_value:.2f} %'
-    )
+    'o'
+#    label=(
+#        f'$R^2$ = {R2:.3f}\n'
+#        f'RMSE = {rmse_value:.3f}\n'
+#        f'MAPE = {mape_value:.2f} %\n'
+#        f'$\\sigma$ = {std_error:.3f}\n'
+#        f'NMBE= {nmbe_value:.2f} %'
+#    )
 )
 
 ax.plot(x_line, x_line, '-')
 
 ax.set_xlabel('Real COP')
 ax.set_ylabel('Simulated COP')
-ax.set_title('Comparison of Simulated COP and Real COP')
+#ax.set_title('Comparison of Simulated COP and Real COP')
 ax.grid(True)
-ax.legend(fontsize=12)
+#ax.legend(fontsize=12)
 
 plt.tight_layout()
 plt.savefig("COP_compare_metrics.png", dpi=300, bbox_inches="tight")

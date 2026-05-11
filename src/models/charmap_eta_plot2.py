@@ -9,7 +9,7 @@ from sklearn.linear_model import HuberRegressor
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
-#import fhgcd_plots.main as fhgCD
+import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv('compressor_results1.csv',sep=',')
 df0 = pd.read_csv('charmap_simulation_results1.csv',sep=',')
@@ -22,7 +22,7 @@ p2_design = 10 # in bar
 e2_design = 0.75
 
 
-#fhgCD.set_matplotlib_style("scientific", "official")
+fhgCD.set_matplotlib_style("darkgrid", "official")
 fig, ax = plt.subplots(figsize=(10, 4))
 
 x = df['Speed line x'].round(4)
@@ -109,7 +109,7 @@ for x_value in x_values_to_plot:
     ax.scatter(y_data, z_data, label=f'X = {x_value}')
 
     # Plot fitted curve
-    ax.plot(y_smooth, z_smooth, label=f'Fit X = {x_value}')
+    ax.plot(y_smooth, z_smooth,linewidth=2,linestyle="-")
 
 
 print(f' "x" : {x_values_to_plot},\n "y" : {y_all},\n "z" :  {z_all}')
