@@ -74,24 +74,24 @@ ma_ronit/
 │
 ├──charline                                     # stores the charline.json files used in simulation
 ├──charmaps                                     # stores the charmaps.json files used used in simulation
-|
+│
 ├── data/process_data
 │   ├── Manheim_data_cleaned.xlsx               # Cleaned and preprocessed data
 │   ├── Manheim_data_original.xlsx              # Original unprocessed measurement data
-|   ├── Manheim_data_cleaned_automated.xlsx     # Cleaned and preprocessed data using automaed script data_cleaning.py
-|   ├── fits_for_maps.xlsx                      # Speedline data for fits
-|   └── *.json                                  # Design json files
+│   ├── Manheim_data_cleaned_automated.xlsx     # Cleaned and preprocessed data using automaed script data_cleaning.py
+│   ├── fits_for_maps.xlsx                      # Speedline data for fits
+│   └── *.json                                  # Design json files
 │
 ├── results/            
 │   └── *.csv                                   # Simulation and calibration results
 │
 ├── src/
-│   |── models/
-│   |    ├── MVV_GKM_simulation_charmap.py       # Heat Pump simulation using char maps
-│   |    ├── MVV_GKM_simulation_charline.py      # Heat Pump simulation using char lines
-│   |    └── MVV_GKM_simulation_compressorP.py   # Heat Pump simulation using real compressor Powers
-|   └── plots/                                   # Contains the plotting scripts used
-
+│   ├── models/
+│   │    ├── MVV_GKM_simulation_charmap.py       # Heat Pump simulation using char maps
+│   │    ├── MVV_GKM_simulation_charline.py      # Heat Pump simulation using char lines
+│   │    └── MVV_GKM_simulation_compressorP.py   # Heat Pump simulation using real compressor Powers
+│   └── plots/                                   # Contains the plotting scripts used
+│
 ├── pyproject.toml                               # Python project configuration
 ├── environment.yml                              # Conda environment file
 └── README.md                                    # Project documentation
