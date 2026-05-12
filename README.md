@@ -25,7 +25,7 @@ python -m pip install -e .
 ```
 ### 5. Place the charline and charmap json files before running simulation
 
-Navigate to your .tespy folder in your HOME directory HOME/.tespy. Create a folder named data, if it does not exist. In this folder, you can place the two json-files for your characteristics which are under the folder charline and charmaps.
+Navigate to your .tespy folder in your HOME directory HOME/.tespy. Create a folder named data, if it does not exist. In this folder, you can place the two json-files  [char_lines.json](charline\char_lines.json) and [char_maps.json](charmaps\char_maps_count6.json)  for your characteristics which are under the folder charline and charmaps.
 
 ### 6. Running the Main Simulation Scripts
 
