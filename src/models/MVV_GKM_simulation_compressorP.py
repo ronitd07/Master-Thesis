@@ -47,10 +47,7 @@ def simulation_loop():
             "dotm_pri": 7.6
         }
     }
-    #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-    df = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-    #df = pd.read_excel('data/process_data/Manheim_data_cleaned3.xlsx', sheet_name="test", header=0,skiprows=range(1, 5)) #Load profile data
-    df2 = pd.read_csv('corrected_efficiency.csv',sep=',')
+    df = pd.read_excel('data/process_data/results/Manheim_data_cleaned.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
 
 
     thermal_loads = df['Column30'] * 1e6 # in Watts (Q at condenser)
@@ -96,7 +93,7 @@ def simulation_loop():
     heatpump_model.x2 = []
 
 
-    for step in tqdm(range(1050,1051,1), desc="Calculation"):
+    for step in tqdm(range(0,n_steps,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
@@ -139,59 +136,6 @@ def simulation_loop():
             raise e
     results_df = pd.DataFrame(results)
     results_df.to_csv('compressor_results_test1.csv', index=False)
-
-
-    #print("Nominal load (MW):", Q_nominal)
-
-    '''
-    x1_df = pd.DataFrame(heatpump_model.x1)
-    print(x1_df)
-    x2_df = pd.DataFrame(heatpump_model.x2)
-    print(x2_df)
-
-    # Given compressor powers in kW
-    y1_df=df['Column37'][:5]
-    y2_df=df['Column38'][:5]
-
-
-
-
-
-  
-
-    from sklearn.linear_model import LinearRegression
-    model1 = LinearRegression()
-    model1.fit(x1_df,y1_df)
-    p1 = model1.predict(x1_df)
-    print(p1)
-
-    model2 = LinearRegression()
-    model2.fit(x2_df,y2_df)
-    p2 = model2.predict(x2_df)
-    print(p2)
-
-    df_pred = pd.DataFrame({
-        "Prediction1": p1,   # predictions from model1
-        "Prediction2": p2    # predictions from model2
-    })
-
-    df_pred.to_csv("power_predictions.csv", index=False)
-
-    '''
-    #Plot the eta_s curve, PH, TS plots, TQ plot
-    #heatpump_model.plot_eta_s()
-    #heatpump_model.generate_state_diagram(diagram_type='Ts', savefig=True, open_file=False)
-    #heatpump_model.generate_state_diagram(diagram_type='logph', savefig=True, open_file=False)
-
-    # To generate temperature profile at condensor and evaporator using custom method 
-    #heatpump_model.generate_temp_plot()
-
-    # To generate temperature profile at condensor using TESPY method 
-    #heatpump_model.generate_temp_plot2()
- 
-    # Adjust layout
-    plt.tight_layout()
-    #plt.show()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # -*- coding: utf-8
 
-"""Module of class TurboCompressor.
+"""Module of class TurboCompressor used for scaling of charmap method
 
 
 This file is part of project TESPy (github.com/oemof/tespy). It's copyrighted

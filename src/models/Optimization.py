@@ -1,11 +1,11 @@
 '''
-This code simulates the heatpump cycle for Maneheim over an year
+Optimization run for charline simulation
 '''
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import CoolProp.CoolProp as CP
-from MVV_GKM_simulation import simulation_loop
+from MVV_GKM_simulation_charline import simulation_loop
 from tespy.tools.characteristics import CharLine,CharMap
 from tqdm import tqdm 
 

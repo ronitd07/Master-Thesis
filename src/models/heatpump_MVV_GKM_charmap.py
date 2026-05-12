@@ -242,7 +242,7 @@ class Heatpump_tespy():
 
         
     def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,
-                            p_inter:float=None, p_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None,
+                            p_inter:float=None, p_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None,*,
                             igva1:float=None,igva2:float=None,eta1:float=None,eta2:float=None,cp1_real:float=None,cp2_real:float=None,k1:float=None,k2:float=None):
         """This function can calculate partload states of an heat pump with a calculated design state
 

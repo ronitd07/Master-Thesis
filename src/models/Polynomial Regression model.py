@@ -1,3 +1,6 @@
+'''
+Perform sensitivity analysis of compressor isentropic efficiency using Polynomial Regression method
+'''
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler,PolynomialFeatures

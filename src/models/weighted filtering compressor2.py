@@ -1,3 +1,6 @@
+'''
+Weighted filtering method for the best speedlines for Compressor stage 2
+'''
 import pandas as pd
 import numpy as np
 
