@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_excel('data/process_data/fits for maps.xlsx', sheet_name="pr2_fit", header=0) 
+df = pd.read_excel('data/process_data/fits_for_maps.xlsx', sheet_name="pr2_fit", header=0) 
 
 # --- Step 1: Filter unreliable points ---
 df_filtered = df[df['COUNT'] >= 20].copy()

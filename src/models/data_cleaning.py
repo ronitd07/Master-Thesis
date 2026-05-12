@@ -7,7 +7,7 @@ import pandas as pd
 
 input_file = "data/process_data/Manheim_data_original.xlsx"
 sheet = "Mannheim_rlgwp_2025-10-22"
-output_file = "data/process_data/clean1.xlsx"
+output_file = "data/process_data/Manheim_data_cleaned_automated.xlsx"
 
 # Read the first 5 rows: header row + rows 1 to 4
 top_rows = pd.read_excel(

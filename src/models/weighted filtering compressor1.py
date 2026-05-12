@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_excel('data/process_data/fits for maps.xlsx', sheet_name="eta1_fit (7)", header=0) 
+df = pd.read_excel('data/process_data/fits_for_maps.xlsx', sheet_name="eta1_fit (7)", header=0) 
 #df = pd.read_excel('data/process_data/fits for maps.xlsx', sheet_name="pr1_fit", header=0) 
 
 # --- Step 1: Filter unreliable points ---

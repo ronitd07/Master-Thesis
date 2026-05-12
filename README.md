@@ -23,8 +23,11 @@ conda activate env
 ```bash
 python -m pip install -e .
 ```
+### 5. Place the charline and charmap json files before running simulation
 
-### 5. Running the Main Simulation Scripts
+Navigate to your .tespy folder in your HOME directory HOME/.tespy. Create a folder named data, if it does not exist. In this folder, you can place the two json-files for your characteristics which are under the folder charline and charmaps.
+
+### 6. Running the Main Simulation Scripts
 
 Simulation with characteristic lines
 ```bash
@@ -69,22 +72,27 @@ The project includes:
 ```text
 ma_ronit/
 │
+├──charline                                     # stores the charline.json files used in simulation
+├──charmaps                                     # stores the charmaps.json files used used in simulation
+|
 ├── data/process_data
-│   ├── Manheim_data_original                 # Original measurement data
-│   └── Manheim_data_cleaned                  # Cleaned and preprocessed data
+│   ├── Manheim_data_cleaned.xlsx               # Cleaned and preprocessed data
+│   ├── Manheim_data_original.xlsx              # Original unprocessed measurement data
+|   ├── Manheim_data_cleaned_automated.xlsx     # Cleaned and preprocessed data using automaed script data_cleaning.py
+|   ├── fits_for_maps.xlsx                      # Speedline data for fits
+|   └── *.json                                  # Design json files
 │
 ├── results/            
-│   └── *.csv                                 # Simulation and calibration outputs
+│   └── *.csv                                   # Simulation and calibration results
 │
 ├── src/
-│   └── models/
-│       ├── MVV_GKM_simulation_charmap.py       # Heat Pump simulation using char maps
-│       ├── MVV_GKM_simulation_charline.py      # Heat Pump simulation using char lines
-│       ├── MVV_GKM_simulation_compressorP.py   # Heat Pump simulation using real compressor Powers
-|   └── plots/
-│
-|
-│
-├── pyproject.toml           # Python project configuration
-├── environment.yml          # Conda environment file
-└── README.md                # Project documentation
+│   |── models/
+│   |    ├── MVV_GKM_simulation_charmap.py       # Heat Pump simulation using char maps
+│   |    ├── MVV_GKM_simulation_charline.py      # Heat Pump simulation using char lines
+│   |    └── MVV_GKM_simulation_compressorP.py   # Heat Pump simulation using real compressor Powers
+|   └── plots/                                   # Contains the plotting scripts used
+
+├── pyproject.toml                               # Python project configuration
+├── environment.yml                              # Conda environment file
+└── README.md                                    # Project documentation
+```
