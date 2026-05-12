@@ -1,5 +1,5 @@
 '''
-This code simulates the heatpump cycle for Maneheim over an year
+This code simulates the heatpump cycle for Maneheim over an year using charline
 '''
 import numpy as np
 import pandas as pd
@@ -76,7 +76,7 @@ def simulation_loop():
 
     count = 0
 
-    for step in tqdm(range(0,1,1), desc="Calculation"):
+    for step in tqdm(range(0,n_steps,1), desc="Calculation"):
         current_time = datetime.iloc[step]
         sink_temp_in = sink_in_temp.iloc[step]
         sink_temp_out = sink_out_temp.iloc[step]
