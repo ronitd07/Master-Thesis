@@ -22,7 +22,8 @@ dependencies = [
     "scipy",
     "scikit-learn",
     "openpyxl",
-    "plotly"
+    "plotly",
+    "tqdm"
 ]
 
 [project.optional-dependencies]

@@ -9,19 +9,19 @@ This project uses a conda environment to manage the Python version and required 
 git clone https://gitlab.cc-asp.fraunhofer.de/ise-bst/fluseeq/ma_ronit.git
 cd ma_ronit
 ```
-### 2. Create conda environment using environment.yml file
+### 2. Create conda environment 
 ```bash
-conda env create -f environment.yml
+conda create --name myenv python=3.14
 ```
 
 ### 3. Activate the environment
 ```bash
-conda activate env
+conda activate myenv
 ```
 
 ### 4. Install the local project using pyproject.toml:
 ```bash
-python -m pip install -e .
+pip install .
 ```
 ### 5. Place the charline and charmap json files before running simulation
 
