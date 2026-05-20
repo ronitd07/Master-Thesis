@@ -243,16 +243,89 @@ class Heatpump_tespy():
         
     def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,
                             p_inter:float=None, p_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None,*,
-                            igva1:float=None,igva2:float=None,eta1:float=None,eta2:float=None,cp1_real:float=None,cp2_real:float=None,k1:float=None,k2:float=None):
+                            igva1:float=None,igva2:float=None,eta1:float=None,eta2:float=None,cp1_real:float=None,cp2_real:float=None,k1:float=None,k2:float=None)-> tuple[float, float, float, float, float, float, float, float, float, float, float]:
         """This function can calculate partload states of an heat pump with a calculated design state
 
-        Args:
-            temperature (float, optional): _description_. Defaults to None.
-            Q (float, optional): _description_. Defaults to None.
+        Parameters
+        ----------
+        sink_temp_in : float, optional
+            sink district heating water inlet temperature, by default None
+        sink_temp_out : float, optional
+            sink district heating water outlet temperature, by default None
+        source_temp_in : float, optional
+            source river water inlet temperature, by default None
+        source_temp_out : float, optional
+            source river water outlet temperature, by default None
+        Q : float, optional
+            thermal load, by default None
+        p_inter : float, optional
+            flash tank pressure, by default None
+        p_evap : float, optional
+            evaporator pressure, by default None
+        t_cond : float, optional
+            condenser temperature, by default None
+        sp_comp1 : float, optional
+            compressor 1 inlet super heat, by default None
+        p_cond : float, optional
+            condenser pressure, by default None
+        t_subcooler : float, optional
+            temperature after subcooler, by default None
+        igva1 : float, optional
+            inlet guide vane angle of compressor 1, by default None
+        igva2 : float, optional
+            inlet guide vane angle of compressor 2, by default None
+        eta1 : float, optional
+            Compressor 1 isentropic efficiency, by default None
+        eta2 : float, optional
+            Compressor 2 isentropic efficiency, by default None
+        cp1_real : float, optional
+            Compressor 1 power, by default None
+        cp2_real : float, optional
+            Compressor 2 power, by default None
+        k1 : float, optional
+            Compressor 1 efficiency scaling factor, by default None
+        k2 : float, optional
+            Compressor 2 efficiency scaling factor, by default None
 
-        Returns:
-            _type_: _description_
+        Returns
+        -------
+        eta1 : float
+            Isentropic efficiency of compressor 1.
+
+        eta2 : float
+            Isentropic efficiency of compressor 2.
+
+        m1 : float
+            Mass flow rate at compressor 1.
+
+        m2 : float
+            Mass flow rate at compressor 2.
+
+        X : float
+            Speedline for Compressor 1.
+
+        x : float
+            Speedline for Compressor 2.
+
+        cop : float
+            Coefficient of performance of the heat pump.
+
+        cp1 : float
+            Compressor power of compressor 1.
+
+        cp2 : float
+            Compressor power of compressor 2.
+
+        igva1 : float
+            Inlet guide vane angle or IGVA setting of compressor 1.
+
+        igva2 : float
+            Inlet guide vane angle or IGVA setting of compressor 2.
+
+        p1 : float
+            Evaporator pressure.
         """
+
         if source_temp_in != None:
             self.c11.set_attr(T=source_temp_in)
             self.c12.set_attr(T=source_temp_out)

@@ -254,15 +254,52 @@ class Heatpump_tespy():
 
         
     def calc_partload_state(self, sink_temp_in:float=None,sink_temp_out:float=None, source_temp_in:float=None, source_temp_out:float=None, Q:float=None,
-                            p_inter:float=None, t_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None):
+                            p_inter:float=None, t_evap:float=None, t_cond:float=None,sp_comp1:float=None,p_cond:float=None,t_subcooler:float=None)-> tuple[float, float, float, float, float, float, float, float, float, float, float]:
         """This function can calculate partload states of an heat pump with a calculated design state
 
         Args:
-            temperature (float, optional): _description_. Defaults to None.
-            Q (float, optional): _description_. Defaults to None.
+            sink_temp_in (float, optional) : sink district heating water inlet temperature. Defaults to None.
+            sink_temp_out (float, optional) : sink district heating water outlet temperature. Defaults to None.
+            source_temp_in (float, optional): source river water inlet temperature. Defaults to None.
+            source_temp_out (float, optional) : source river water outlet temperature. Defaults to None.
+            Q (float, optional) : thermal load. Defaults to None.
+            p_inter (float, optional) : flash tank pressure. Defaults to None.
+            t_evap (float, optional) : evaporator temperature. Defaults to None.
+            t_cond (float, optional) : condenser temperature. Defaults to None.
+            sp_comp1 (float, optional) : compressor 1 inlet super heat. Defaults to None.
+            p_cond (float, optional) : condenser pressure. Defaults to None.
+            t_subcooler (float, optional) : temperature after subcooler. Defaults to None.
 
-        Returns:
-            _type_: _description_
+        Returns
+        -------
+        t_in_cp1 : float
+            Temperature in compressor 1 inlet
+        t_in_cp2 : float
+            Temperature in compressor 2 inlet       
+        p_in_cp1 : float
+            Pressure in compressor 1 inlet       
+        p_in_cp2 : float
+            Pressure in compressor 2 inlet       
+        eta1 : float
+            Compressor 1 isentropic efficiency       
+        eta2 : float
+            Compressor 2 isentropic efficiency             
+        m1 : float
+            Compressor 1 inlet mass flow  
+        m2 : float
+            Compressor 2 inlet mass flow       
+        pr1 : float
+            Compressor 1 pressure ratio         
+        pr2 : float
+            Compressor 2 pressure ratio        
+        cop : float
+            Coefficient of Performance              
+        ratio : float
+            Ratio of compressor 1 power to total power       
+        cp1 : float
+            Compressor 1 power       
+        cp2 : float
+            Compressor 2 power                                                                                              
         """
         if source_temp_in != None:
             self.c10.set_attr(T=source_temp_in)
@@ -360,24 +397,6 @@ class Heatpump_tespy():
         )
 
         return line
-   
-    def step(self, sink_temp_in:float,sink_temp_out:float, source_temp_in:float,source_temp_out:float, Q:float, p_inter:float,t_evap:float,
-             t_cond:float,sp_comp1:float,p_cond:float,t_subcooler:float,cooling:bool=False):
-        """This function takes one step in the heatpump simulation and returns the values
-
-        Args:
-            Q (float): _description_
-            ambient_temperature (float): _description_
-            cooling (bool, optional): _description_. Defaults to False.
-
-        Returns:
-            _type_: _description_
-        """
-        if cooling == False:
-            cop, cp1,cp2,load,T_delta,ft_x = self.calc_partload_state(sink_temp_in,sink_temp_out, source_temp_in,source_temp_out, Q, p_inter, t_evap,t_cond,sp_comp1,p_cond,t_subcooler)
-        else:
-            cop, power = self.calc_partload_state_cooling(source_temp_in, sink_temp_out,Q)
-        return cop, cp1,cp2,load,T_delta,ft_x
 
     def plot(self):
         diagram = FluidPropertyDiagram("R1234ZE")
