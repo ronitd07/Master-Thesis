@@ -1,5 +1,5 @@
 '''
-This code simulates the heatpump cycle for Maneheim over an year
+This code simulates the heatpump cycle for Maneheim over an year with given real compressor power
 '''
 import numpy as np
 import pandas as pd
@@ -135,7 +135,7 @@ def simulation_loop():
             print(f"   Sink_temp = {sink_temp_out}, ambient_temp = {source_temp_in}")
             raise e
     results_df = pd.DataFrame(results)
-    results_df.to_csv('compressor_results_test1.csv', index=False)
+    results_df.to_csv('compressor_simulation_results.csv', index=False)
 
 
 if __name__ == "__main__":

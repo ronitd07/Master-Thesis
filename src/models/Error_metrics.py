@@ -7,7 +7,23 @@ from sklearn.metrics import r2_score
 # -----------------------------
 # Load data
 # -----------------------------
-df = pd.read_csv('charline_simulation_results.csv', sep=',')
+while True:
+    choice = input("Which result file do you want to run? Enter 'charline' or 'charmap' or 'compressor': ").strip().lower()
+
+
+    if choice == "charline":
+        file_name = "charline_simulation_results.csv"
+        break
+    elif choice == "charmap":
+        file_name = "charmap_simulation_results.csv"
+        break
+    elif choice == "compressor":
+        file_name = "compressor_simulation_results.csv"
+        break    
+    else:
+        print("Invalid choice. Please enter either 'charline' or 'charmap' or 'compressor'.")
+
+df = pd.read_csv(file_name, sep=",")
 
 # -----------------------------
 # Keep only rows where both values exist

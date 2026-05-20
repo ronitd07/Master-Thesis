@@ -8,18 +8,31 @@ import matplotlib.dates as mdates
 import numpy as np
 
 
+# -----------------------------
+# Load data
+# -----------------------------
+while True:
+    choice = input("Which result file do you want to run? Enter 'charline' or 'charmap' or 'compressor': ").strip().lower()
 
-#df = pd.read_csv('charmap_simulation_results6_count.csv',sep=',')
-df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
-#df2 = pd.read_csv('charmap_simulation_results6full.csv',sep=',')
-df2 = pd.read_csv('compressor_results1.csv',sep=',')
+
+    if choice == "charline":
+        file_name = "charline_simulation_results.csv"
+        break
+    elif choice == "charmap":
+        file_name = "charmap_simulation_results.csv"
+        break
+    elif choice == "compressor":
+        file_name = "compressor_simulation_results.csv"
+        break    
+    else:
+        print("Invalid choice. Please enter either 'charline' or 'charmap' or 'compressor'.")
+
+df = pd.read_csv(file_name, sep=",")
 
 fhgCD.set_matplotlib_style("darkgrid", "official")
 
-df1_10 = df1.iloc[::10]
-df2_10 = df2.iloc[::10]
 # Absolute error
-error_abs = df2['cop'].values - df2['cop_given'].values
+error_abs = df['cop'].values - df['cop_given'].values
 
 
 fig, ax = plt.subplots(figsize=(8, 4))

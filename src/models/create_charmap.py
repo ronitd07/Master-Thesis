@@ -11,9 +11,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 #import fhgcd_plots.main as fhgCD
 import json
+from pathlib import Path
 
-df = pd.read_csv('compressor_results1.csv',sep=',')
-df1 = pd.read_excel('data/process_data/Manheim_data_cleaned4.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
+df = pd.read_csv(r'results\compressor_results1.csv',sep=',')
+df1 = pd.read_excel(r'data\process_data\Manheim_data_cleaned.xlsx', sheet_name="Mannheim_rlgwp_2025-10-22", header=0,skiprows=range(1, 5)) #Load profile data
 
 
 def eta1_map():
@@ -298,7 +299,8 @@ def create_compressor_map():
         "map_pr2": {"x": x_pr2_full, "y": y_pr2_full, "z": z_pr2_full}
 }
     
-    with open(r"C:\Users\ron99091\.tespy\data\char_maps.json", "w") as f:
+    path = Path.home() / ".tespy" / "data" / "char_maps.json"
+    with open(path, "w") as f:
         json.dump(map_data,f,indent=1, cls=SmartEncoder)
 
 class SmartEncoder(json.JSONEncoder):

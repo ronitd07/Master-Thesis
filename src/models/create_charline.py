@@ -6,6 +6,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
 import json
+from pathlib import Path
 #import fhgcd_plots.main as fhgCD
 
 df = pd.read_csv(r'results\compressor_results1.csv',sep=',') # Real compressor power simulation results
@@ -86,7 +87,9 @@ def create_compressor_line():
                 "line_eta1": {"x": x1, "y": y1},
                 "line_eta2": {"x": x2, "y": y2},
         }
-        with open(r"C:\Users\ron99091\.tespy\data\char_lines.json", "w") as f:
+        path = Path.home() / ".tespy" / "data" / "char_lines.json"
+
+        with open(path, "w") as f:
                 json.dump(charline_data,f,indent=1, cls=SmartEncoder)     
 
 class SmartEncoder(json.JSONEncoder):

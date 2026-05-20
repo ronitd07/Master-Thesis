@@ -1,6 +1,6 @@
 
 """
-heat pump model of MVV GKM Manheim using real compressor Power
+heat pump model of MVV GKM Manheim using given real compressor Power
 
 """
 from tespy.components import CycleCloser, Compressor, Valve, HeatExchanger, Source, Sink, Condenser, Pump ,Splitter,DropletSeparator, Merge, Drum,MovingBoundaryHeatExchanger,PolynomialCompressor,TurboCompressor
@@ -262,7 +262,6 @@ class Heatpump_tespy():
 
             self.nwk.solve("offdesign", design_path="data/process_data/hp_design_"+self.name+".json")
             self.nwk.print_results()
-            self.nwk.save('results.csv')
             cop = abs(self.cd.Q.val) / (self.cp1.P.val + self.cp2.P.val)
             cp1 = self.cp1.P.val 
             cp2 = self.cp2.P.val 

@@ -141,7 +141,7 @@ def simulation_loop():
             continue
         
     results_df = pd.DataFrame(results)
-    results_df.to_csv('charmap_simulation_results_test.csv', index=False) #Results csv file
+    results_df.to_csv('charmap_simulation_results.csv', index=False) #Results csv file
 
     n_failed = (results_df['status'] == 'failed').sum()
     print(f'Failed count : {n_failed} out of {count}')

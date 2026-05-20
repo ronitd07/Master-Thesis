@@ -89,8 +89,6 @@ def simulation_loop():
         sp_comp1 = comp1_sp.iloc[step]
         p_cond = cond_p.iloc[step]
         t_subcooler = subcooler_t.iloc[step]
-        cp1_real = df['Column37'].iloc[step] # in kW
-        cp2_real = df['Column38'].iloc[step] # in kW
         count +=1
         try:
             # Step heat pump simulation
@@ -142,7 +140,7 @@ def simulation_loop():
 
             continue
     results_df = pd.DataFrame(results)
-    results_df.to_csv('charline_simulation_results_test.csv', index=False) 
+    results_df.to_csv('charline_simulation_results.csv', index=False) 
 
     n_failed = (results_df['status'] == 'failed').sum()
     print(f'Failed count : {n_failed} out of {count}')
