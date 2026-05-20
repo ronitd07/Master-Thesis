@@ -76,9 +76,9 @@ python src/plots/plot_COP_error_per_Speedline_boxplot.py
 ```
 
 ### Input files 
-[Manheim_data_original.xlsx](data/process_data/Manheim_data_original.xlsx) - Unprocessed data received
-[Manheim_data_cleaned.xlsx](data/process_data/Manheim_data_cleaned.xlsx) - processed input data. Also after Column 30 it has the results from the real compressor simulation run like compressor powers, efficiency, igva, scaling factor
-[Manheim_data_cleaned_automated.xlsx](data/process_data/Manheim_data_cleaned_automated.xlsx) - processed input data after running the [data_cleaning.py](src/models/data_cleaning.py) script but will not have the results from real compressor power runs.
+- [Manheim_data_original.xlsx](data/process_data/Manheim_data_original.xlsx) - Unprocessed data received
+- [Manheim_data_cleaned.xlsx](data/process_data/Manheim_data_cleaned.xlsx) - processed input data. Also after Column 30 it has the results from the real compressor simulation run like compressor powers, efficiency, igva, scaling factor
+- [Manheim_data_cleaned_automated.xlsx](data/process_data/Manheim_data_cleaned_automated.xlsx) - processed input data after running the [data_cleaning.py](src/models/data_cleaning.py) script but will not have the results from real compressor power runs.
 
 # Simulation and Calibration of Large-Scale Heat Pumps Using Measurement Data
 
