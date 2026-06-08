@@ -88,6 +88,9 @@ def create_compressor_line():
                 "line_eta2": {"x": x2, "y": y2},
         }
         path = Path.home() / ".tespy" / "data" / "char_lines.json"
+        
+        # Create .tespy/data folder if it does not exist
+        path.parent.mkdir(parents=True, exist_ok=True)        
 
         with open(path, "w") as f:
                 json.dump(charline_data,f,indent=1, cls=SmartEncoder)     

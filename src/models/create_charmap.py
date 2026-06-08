@@ -300,8 +300,13 @@ def create_compressor_map():
 }
     
     path = Path.home() / ".tespy" / "data" / "char_maps.json"
+
+    # Create .tespy/data folder if it does not exist
+    path.parent.mkdir(parents=True, exist_ok=True)
+    
     with open(path, "w") as f:
         json.dump(map_data,f,indent=1, cls=SmartEncoder)
+        
 
 class SmartEncoder(json.JSONEncoder):
     def iterencode(self, obj, _one_shot=False):

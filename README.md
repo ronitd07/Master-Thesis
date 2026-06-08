@@ -7,7 +7,7 @@ This project uses a conda environment to manage the Python version and required 
 
 ```bash
 git clone https://github.com/ronitd07/Master-Thesis.git
-cd ma_ronit
+cd Master-Thesis
 ```
 ### 2. Create conda environment 
 ```bash
