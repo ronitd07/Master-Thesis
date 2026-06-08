@@ -6,7 +6,7 @@ This project uses a conda environment to manage the Python version and required 
 ### 1. Clone the repository
 
 ```bash
-git clone https://gitlab.cc-asp.fraunhofer.de/ise-bst/fluseeq/ma_ronit.git
+git clone https://github.com/ronitd07/Master-Thesis.git
 cd ma_ronit
 ```
 ### 2. Create conda environment 
