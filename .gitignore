@@ -19,3 +19,8 @@ __pycache__/
 
 # Ignore egg-info folder
 *.egg-info
+
+#Ignore the data files
+data/process_data/Manheim_data_cleaned_automated.xlsx
+data/process_data/Manheim_data_cleaned.xlsx 
+data/process_data/Manheim_data_original.xlsx
